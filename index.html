@@ -131,13 +131,14 @@
         .connection-indicator.offline { background: var(--warning); }
 
         /* Standard Buttons */
-        .btn { padding: 9px 18px; border-radius: 12px; font-weight: 500; font-size: 14px; cursor: pointer; border: none; transition: all 0.2s; font-family: 'Inter', sans-serif; display: inline-flex; align-items: center; gap: 8px; }
+        .btn { padding: 9px 18px; border-radius: 12px; font-weight: 500; font-size: 14px; cursor: pointer; border: none; transition: all 0.2s; font-family: 'Inter', sans-serif; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
         .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(109, 40, 217, 0.2); }
-        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(109, 40, 217, 0.3); }
+        .btn-primary:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(109, 40, 217, 0.3); }
         .btn-ghost { background: transparent; color: var(--gray); }
-        .btn-ghost:hover { background: var(--bg); color: var(--dark); }
+        .btn-ghost:hover:not(:disabled) { background: var(--bg); color: var(--dark); }
         .btn-outline { background: white; border: 1.5px solid var(--border); color: var(--dark); }
-        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-outline:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
 
         /* Dynamic Special Buttons */
         .btn-hero { background: linear-gradient(135deg, var(--primary) 0%, #9333ea 100%); color: white; padding: 16px 32px; border-radius: 16px; font-weight: 700; font-size: 16px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 12px; box-shadow: 0 10px 25px rgba(109,40,217,0.4); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -283,7 +284,7 @@
         .chat-input { flex: 1; padding: 14px 20px; border: 1.5px solid var(--border); border-radius: 24px; font-size: 14px; outline: none; transition: border-color 0.2s; font-family: 'Inter', sans-serif; resize: none; max-height: 120px; overflow-y: auto; }
         .chat-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(109,40,217,0.1); }
         .chat-send-btn { width: 48px; height: 48px; flex-shrink: 0; border-radius: 50%; background: var(--primary); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 4px 12px rgba(109, 40, 217, 0.2); font-size: 16px; }
-        .chat-send-btn:hover { background: var(--primary-dark); transform: scale(1.05); }
+        .chat-send-btn:hover:not(:disabled) { background: var(--primary-dark); transform: scale(1.05); }
         .chat-send-btn:disabled { background: var(--gray-light); cursor: not-allowed; transform: none; box-shadow: none; }
 
         /* Page Views */
@@ -355,6 +356,8 @@
         .toast i { color: var(--success); font-size: 18px; }
         .toast.error { border-left-color: var(--warning); }
         .toast.error i { color: var(--warning); }
+        .toast.warning { border-left-color: #f59e0b; }
+        .toast.warning i { color: #f59e0b; }
         .toast.loading { border-left-color: var(--primary); }
         .toast.loading i { color: var(--primary); animation: spin 1s linear infinite; }
 
@@ -576,7 +579,7 @@
                     <label class="form-label">Password</label>
                     <input type="password" class="form-input" id="loginPassword" required placeholder="••••••••">
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 8px;">
+                <button type="submit" class="btn btn-primary" id="loginSubmitBtn" style="width: 100%; margin-top: 8px;">
                     Login
                 </button>
             </form>
@@ -605,7 +608,7 @@
                     <label class="form-label">Password</label>
                     <input type="password" class="form-input" id="regPassword" required placeholder="Minimum 6 characters" minlength="6">
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 8px;">
+                <button type="submit" class="btn btn-primary" id="registerSubmitBtn" style="width: 100%; margin-top: 8px;">
                     Create Account
                 </button>
             </form>
@@ -887,12 +890,12 @@
                 if (status === 'Suspended') {
                     if (!STATE.isSuspended) {
                         STATE.isSuspended = true;
-                        showToast('Security Alert: Your session was restricted.', 'error');
+                        showToast('Access denied. Your account is currently suspended.', 'error');
                         navigate('suspended');
                     }
                 } else if (status === 'Active' && STATE.isSuspended) {
                     STATE.isSuspended = false;
-                    showToast('Your account has been restored.', 'success');
+                    showToast('Your account has been successfully restored.', 'success');
                     navigate('home');
                 }
             });
@@ -1010,9 +1013,14 @@
         }
 
         function getInitials(name) { return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2); }
+        
         function openModal(type) { 
-            if(type === 'register' && !STATE.config.registrationEnabled) return showToast('Registration disabled.', 'error');
-            closeSidebars(); document.getElementById(type + 'Modal').classList.add('active'); document.body.style.overflow = 'hidden'; 
+            if(type === 'register' && !STATE.config.registrationEnabled) {
+                return showToast('Registration is currently disabled by the administration.', 'error');
+            }
+            closeSidebars(); 
+            document.getElementById(type + 'Modal').classList.add('active'); 
+            document.body.style.overflow = 'hidden'; 
         }
         function closeModal(type) { document.getElementById(type + 'Modal').classList.remove('active'); document.body.style.overflow = ''; }
         function switchModal(from, to) { closeModal(from); setTimeout(() => openModal(to), 200); }
@@ -1021,47 +1029,95 @@
         async function handleRegister(e) {
             e.preventDefault();
             if(!STATE.config.registrationEnabled) return showToast('Registration disabled.', 'error');
-            const name = document.getElementById('regName').value.trim(), email = document.getElementById('regEmail').value.trim().toLowerCase(), password = document.getElementById('regPassword').value, userId = encodeEmail(email), userRef = ref(db, `users/${userId}`);
+            
+            const btn = document.getElementById('registerSubmitBtn');
+            const originalText = btn.innerHTML;
+            
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim().toLowerCase();
+            const password = document.getElementById('regPassword').value;
+            
+            if (password.length < 6) return showToast('Password must be at least 6 characters long.', 'warning');
+            
+            // Freeze UI State
+            btn.disabled = true; 
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Creating Account...';
+
+            const userId = encodeEmail(email);
+            const userRef = ref(db, `users/${userId}`);
 
             try {
-                if ((await get(userRef)).exists()) return showToast('Email already registered', 'error');
+                const snapshot = await get(userRef);
+                if (snapshot.exists()) {
+                    btn.disabled = false; btn.innerHTML = originalText;
+                    return showToast('This email is already registered. Please login.', 'error'); 
+                }
+                
                 await set(userRef, { id: userId, name: name, email: email, password: password, role: 'User', status: 'Active', joinedAt: Date.now() });
                 STATE.user = { id: userId, name: name, email: email }; localStorage.setItem('gpm_rtdb_session', JSON.stringify(STATE.user));
                 listenToUserLikes(); listenToUserSupportStatus(); listenToUserStatus();
                 closeModal('register'); renderAuth(); document.getElementById('registerForm').reset();
-                showToast(`Welcome, ${name}! Your account is created.`);
+                showToast(`Account successfully created! Welcome, ${name}.`);
                 try{ await push(ref(db, 'audit'), {timestamp: Date.now(), type: 'AUTH', action: 'REGISTER', identity: email, desc: 'New app registration'}); }catch(e){}
                 scheduleRender(); // Re-render in place
-            } catch (error) { showToast('Registration failed.', 'error'); }
+            } catch (error) { 
+                showToast('Registration failed due to a network error.', 'error'); 
+            } finally {
+                if(btn) { btn.disabled = false; btn.innerHTML = originalText; }
+            }
         }
 
         async function handleLogin(e) {
             e.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim().toLowerCase(), password = document.getElementById('loginPassword').value, userId = encodeEmail(email), userRef = ref(db, `users/${userId}`);
+            const btn = document.getElementById('loginSubmitBtn');
+            const originalText = btn.innerHTML;
+            
+            const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) return showToast('Please enter both email and password.', 'warning');
+
+            // Freeze UI State
+            btn.disabled = true; 
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Authenticating...';
+
+            const userId = encodeEmail(email);
+            const userRef = ref(db, `users/${userId}`);
 
             try {
                 const snapshot = await get(userRef);
-                if (!snapshot.exists() || snapshot.val().password !== password) return showToast('Invalid credentials', 'error');
+                if (!snapshot.exists()) {
+                    btn.disabled = false; btn.innerHTML = originalText;
+                    return showToast('Account not found. Please check your email or register.', 'error');
+                }
                 
-                const userData = snapshot.val(); await update(userRef, { lastLogin: Date.now() });
+                const userData = snapshot.val();
+                if (userData.password !== password) {
+                    btn.disabled = false; btn.innerHTML = originalText;
+                    return showToast('Incorrect password. Please try again.', 'error');
+                }
                 
-                // Mount session regardless of status so support works
+                await update(userRef, { lastLogin: Date.now() });
+                
                 STATE.user = { id: userId, name: userData.name, email: userData.email };
                 localStorage.setItem('gpm_rtdb_session', JSON.stringify(STATE.user));
 
-                // Process specific Suspension Jail Login Vector
                 if (userData.status === 'Suspended') {
                     STATE.isSuspended = true; listenToUserSupportStatus(); listenToUserStatus(); 
-                    closeModal('login'); renderAuth(); document.getElementById('loginForm').reset();
-                    navigate('suspended'); return;
+                    closeModal('login'); renderAuth(); document.getElementById('loginForm').reset(); navigate('suspended'); 
+                    return;
                 }
 
                 STATE.isSuspended = false; listenToUserLikes(); listenToUserSupportStatus(); listenToUserStatus();
                 closeModal('login'); renderAuth(); document.getElementById('loginForm').reset();
-                showToast(`Welcome back, ${userData.name}!`); 
+                showToast(`Login successful. Welcome back, ${userData.name}!`); 
                 
-                scheduleRender(); // Smart Re-hydration: Unlock current page without forcing home redirect
-            } catch (error) { showToast('Login failed.', 'error'); }
+                scheduleRender(); // Smart Re-hydration: Unlock current page seamlessly
+            } catch (error) { 
+                showToast('Authentication failed. Please check your connection.', 'error'); 
+            } finally {
+                if(btn) { btn.disabled = false; btn.innerHTML = originalText; }
+            }
         }
 
         function logout() {
@@ -1075,30 +1131,22 @@
             if (Listeners.likes) { Listeners.likes(); Listeners.likes = null; }
             const navBadge = document.getElementById('nav-support-badge'); if (navBadge) navBadge.classList.add('hidden');
             
-            showToast('You have been logged out'); 
+            showToast('You have been securely logged out.'); 
             document.getElementById('userDropdown').classList.remove('active'); 
             
-            // Context-Aware Navigation Check
             if (wasContact) {
-                scheduleRender(); // Rehydrates the support lock screen
-                setTimeout(() => openModal('login'), 100); // Prompts seamless re-login
+                scheduleRender(); 
+                setTimeout(() => openModal('login'), 100); 
             } else {
                 navigate('home');
             }
         }
 
         function navigate(page, id = null) {
-            // Strict Navigation Interceptors based on Global State Configurations
-            if (STATE.isSuspended && page !== 'logout' && page !== 'contact' && page !== 'suspended') { 
-                page = 'suspended'; 
-            } else if (STATE.config.maintenanceMode && page !== 'contact' && page !== 'logout') {
-                page = 'home'; 
-            }
-
-            STATE.currentPage = page;
-            STATE.currentProphecyId = id;
+            if (STATE.isSuspended && page !== 'logout' && page !== 'contact' && page !== 'suspended') page = 'suspended'; 
+            else if (STATE.config.maintenanceMode && page !== 'contact' && page !== 'logout') page = 'home';
+            STATE.currentPage = page; STATE.currentProphecyId = id;
             
-            // Clean up URL deep link parameter if navigating away from single post natively
             if (page !== 'single') {
                 const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
                 window.history.replaceState({path:newUrl}, '', newUrl);
@@ -1116,7 +1164,7 @@
 
         window.openShareProphecy = async function(id) {
             const prophecy = STATE.propheciesMap.get(id);
-            if (!prophecy) return showToast('Prophecy not found', 'error');
+            if (!prophecy) return showToast('Prophecy not found to share.', 'error');
 
             const loadingToast = document.createElement('div');
             loadingToast.className = 'toast loading show';
@@ -1124,7 +1172,6 @@
             document.getElementById('toastContainer').appendChild(loadingToast);
 
             try {
-                // Resolve Exact Deep Link URL
                 const currentDomain = window.location.hostname;
                 const postDeepLinkUrl = `${window.location.origin}${window.location.pathname}?p=${id}`;
                 const professionalShareText = `📖 ${prophecy.title}\n✍️ By Minister Michael\n\nRead the full prophetic message and share your testimony here:\n`;
@@ -1133,9 +1180,8 @@
                 document.getElementById('exportDate').textContent = formatDate(prophecy.date);
                 document.getElementById('exportTitle').textContent = prophecy.title;
                 
-                // Smart Typography Adaptation based on Length
                 const exportBody = document.getElementById('exportBody');
-                exportBody.innerHTML = prophecy.body; // Render HTML tags
+                exportBody.innerHTML = prophecy.body; 
                 
                 const charCount = exportBody.textContent.length;
                 if (charCount < 250) { exportBody.style.fontSize = '42px'; exportBody.style.lineHeight = '1.8'; } 
@@ -1143,65 +1189,46 @@
                 else if (charCount < 1200) { exportBody.style.fontSize = '26px'; exportBody.style.lineHeight = '1.6'; } 
                 else { exportBody.style.fontSize = '22px'; exportBody.style.lineHeight = '1.5'; }
 
-                // Handle Image Loading with CORS bypass detection
                 const exportImg = document.getElementById('exportImg');
                 if (prophecy.image) {
                     exportImg.classList.remove('hidden'); exportImg.src = prophecy.image;
                     await new Promise((resolve) => {
                         exportImg.onload = resolve; exportImg.onerror = () => { exportImg.classList.add('hidden'); resolve(); };
-                        setTimeout(resolve, 3000); // 3s timeout
+                        setTimeout(resolve, 3000); 
                     });
                 } else { exportImg.classList.add('hidden'); }
 
-                // Render Canvas
                 const wrapper = document.getElementById('exportContainerWrapper');
                 const canvas = await html2canvas(wrapper, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff' });
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.95); 
                 
-                // Mount to Share Modal
                 document.getElementById('shareImagePreviewBox').innerHTML = `<img src="${dataUrl}" alt="Preview">`;
                 
-                // Bind Download Button
                 document.getElementById('btnDownloadImage').onclick = () => {
                     const link = document.createElement('a'); link.download = `Gospel_Prophecy_${id}.jpg`; link.href = dataUrl; link.click();
                 };
 
-                // Bind Native Share Button (Injects Deep Link!)
                 document.getElementById('btnNativeShare').onclick = async () => {
                     try {
                         const blob = await (await fetch(dataUrl)).blob();
                         const file = new File([blob], 'prophecy.jpg', { type: 'image/jpeg' });
-                        // CRITICAL FIX: Append URL directly to text to prevent WhatsApp/Facebook intent drops
                         const robustShareText = `${professionalShareText}🔗 ${postDeepLinkUrl}`;
 
                         if (navigator.canShare && navigator.canShare({ files:[file] })) {
-                            await navigator.share({
-                                files: [file],
-                                title: prophecy.title,
-                                text: robustShareText // URL included safely inside text
-                            });
+                            await navigator.share({ files: [file], title: prophecy.title, text: robustShareText });
+                            showToast('Image shared successfully!', 'success');
                         } else if (navigator.share) {
-                            // Fallback: Device supports native share but NOT file attachments
-                            await navigator.share({
-                                title: prophecy.title,
-                                text: robustShareText
-                            });
-                            showToast('Image attachment not supported by device. Link shared natively!', 'warning');
+                            await navigator.share({ title: prophecy.title, text: robustShareText });
+                            showToast('Image attachment not supported. Link shared natively!', 'warning');
                         } else {
-                            // No native share supported at all
                             showToast('Native sharing not supported. Image downloaded.', 'warning');
                             document.getElementById('btnDownloadImage').click();
                         }
                     } catch (err) { 
-                        // Silently ignore user aborts (closing the share sheet)
-                        if (err.name !== 'AbortError') {
-                            console.error(err);
-                            showToast('Sharing failed. Try copying the link.', 'error');
-                        }
+                        if (err.name !== 'AbortError') { showToast('Sharing failed. Try copying the link.', 'error'); }
                     }
                 };
 
-                // Bind Copy Link Button (Injects Deep Link + Professional Text!)
                 document.getElementById('btnCopyLink').onclick = () => {
                     navigator.clipboard.writeText(`${professionalShareText}🔗 ${postDeepLinkUrl}`);
                     showToast('Professional Link copied to clipboard!');
@@ -1210,23 +1237,18 @@
                 loadingToast.remove(); openModal('share');
 
             } catch (err) {
-                console.error(err); loadingToast.remove();
-                showToast('Failed to generate image. Basic deep-link copied.', 'warning');
+                loadingToast.remove(); showToast('Failed to generate image. Basic deep-link copied.', 'warning');
                 navigator.clipboard.writeText(`📖 ${prophecy.title}\n🔗 ${window.location.origin}${window.location.pathname}?p=${id}`);
             }
         };
         
-        // Basic Direct Share Fallback
         function shareProphecy(id) {
             const prophecy = STATE.propheciesMap.get(id); if (!prophecy) return;
             const postDeepLinkUrl = `${window.location.origin}${window.location.pathname}?p=${id}`;
             const professionalShareText = `📖 ${prophecy.title}\n✍️ By Minister Michael\n\nRead the full prophetic message here:\n🔗 ${postDeepLinkUrl}`;
 
             if (navigator.share) {
-                navigator.share({ 
-                    title: prophecy.title, 
-                    text: `📖 ${prophecy.title}\n✍️ By Minister Michael\n\nRead the full prophetic message here:\n🔗 ${postDeepLinkUrl}` 
-                }).catch(e => {
+                navigator.share({ title: prophecy.title, text: professionalShareText }).catch(e => {
                     if (e.name !== 'AbortError') navigator.clipboard.writeText(professionalShareText).then(() => showToast('Link copied to clipboard!'));
                 });
             } else {
@@ -1396,12 +1418,18 @@
 
         async function sendChatMessage(e) {
             if (e) e.preventDefault(); 
-            const currentUser = STATE.user; // Synchronous state capture prevents null-errors on mid-flight logout
+            const currentUser = STATE.user; 
             if (!currentUser) return;
             
             const input = document.getElementById('chatInput'); const btn = document.getElementById('chatSendBtn'); 
-            const text = input.value.trim(); if (!text) return;
+            const text = input.value.trim(); 
+            
+            if (!text) {
+                return showToast('Message cannot be empty.', 'warning');
+            }
+            
             input.disabled = true; btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
             
             try {
                 const timestamp = Date.now();
@@ -1410,10 +1438,12 @@
                 await update(ref(db, `support_chats/${currentUser.id}`), { unreadAdmin: true, lastActivity: timestamp });
                 if(input) input.value = '';
                 try{ await push(ref(db, 'audit'), {timestamp: Date.now(), type: 'SUPPORT', action: 'CREATE', identity: currentUser.email, desc: 'Sent direct support message'}); }catch(e){}
-            } catch (error) { showToast('Failed to send message', 'error'); } 
+            } catch (error) { 
+                showToast('Failed to send message. Please check connection.', 'error'); 
+            } 
             finally { 
                 if(input) input.disabled = false; 
-                if(btn) btn.disabled = false; 
+                if(btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; }
                 if(input) input.focus(); 
             }
         }
@@ -1424,7 +1454,7 @@
             let commentFormUI = !STATE.config.commentsEnabled ? `<div class="p-6 text-center bg-gray-50 rounded-xl text-gray font-medium border border-border mt-4"><i class="fa-solid fa-lock mr-2 text-gray-light"></i>This feature has been disabled by the administration.</div>` : STATE.user ? `
                 <form class="comment-form" onsubmit="addComment(event, '${id}')">
                     <textarea placeholder="Share your testimony or what God is saying to you through this word..." required id="commentText"></textarea>
-                    <div class="comment-form-footer"><button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i> Post Testimony</button></div>
+                    <div class="comment-form-footer"><button type="submit" class="btn btn-primary" id="commentSubmitBtn"><i class="fa-solid fa-paper-plane"></i> Post Testimony</button></div>
                 </form>` : `<div class="login-prompt"><i class="fa-solid fa-lock"></i> Please <a onclick="openModal('login')">login</a> to share your testimony</div>`;
 
             safeHTMLPatch('centerContent', `
@@ -1469,34 +1499,59 @@
         }
 
         async function toggleLike(id) {
-            const currentUser = STATE.user; // Synchronous capture
+            const currentUser = STATE.user; 
             if (!currentUser) { showToast('Please login to like prophecies', 'error'); openModal('login'); return; }
+            
+            const btn = document.getElementById('likeBtn');
+            if (btn) btn.disabled = true; // Freeze UI
+            
             try {
                 if (STATE.userLikes.includes(id)) { 
                     await set(ref(db, `users/${currentUser.id}/likes/${id}`), null); 
-                    await runTransaction(ref(db, `content/${id}/likes`), (c) => Math.max(0, (c || 0) - 1)); showToast('Removed from likes'); 
+                    await runTransaction(ref(db, `content/${id}/likes`), (c) => Math.max(0, (c || 0) - 1)); 
+                    showToast('Prophecy removed from your likes.', 'success'); 
                 } else { 
                     await set(ref(db, `users/${currentUser.id}/likes/${id}`), true); 
-                    await runTransaction(ref(db, `content/${id}/likes`), (c) => (c || 0) + 1); showToast('Added to your likes'); 
+                    await runTransaction(ref(db, `content/${id}/likes`), (c) => (c || 0) + 1); 
+                    showToast('Prophecy added to your likes!', 'success'); 
                     try{ await push(ref(db, 'audit'), {timestamp: Date.now(), type: 'USER', action: 'LIKE', identity: currentUser.email, desc: `Liked post ${id}`}); }catch(e){} 
                 }
-            } catch (error) { showToast('Action failed', 'error'); }
+            } catch (error) { 
+                showToast('Failed to update likes.', 'error'); 
+            } finally {
+                if (btn) btn.disabled = false;
+            }
         }
 
         async function addComment(e, prophecyId) {
             e.preventDefault(); 
-            const currentUser = STATE.user; // Synchronous capture
+            const currentUser = STATE.user; 
             const input = document.getElementById('commentText');
-            if (!currentUser || !STATE.config.commentsEnabled || !input.value.trim()) return;
+            const btn = document.getElementById('commentSubmitBtn');
+            
+            if (!currentUser || !STATE.config.commentsEnabled) return;
+            
+            if (!input.value.trim()) {
+                return showToast('Please enter a valid message before submitting.', 'warning');
+            }
+            
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Publishing...';
             
             try {
                 await push(ref(db, `content/${prophecyId}/comments`), { user: currentUser.name, userId: currentUser.id, text: input.value.trim(), date: new Date().toISOString(), avatarColor: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)] });
-                input.value = ''; showToast('Your testimony has been shared!');
+                input.value = ''; 
+                showToast('Your testimony was published successfully!', 'success');
                 try{ await push(ref(db, 'audit'), {timestamp: Date.now(), type: 'CONTENT', action: 'COMMENT', identity: currentUser.email, desc: `Commented on post ${prophecyId}`}); }catch(e){}
-            } catch (error) { showToast('Failed to post comment', 'error'); }
+            } catch (error) { 
+                showToast('Failed to post testimony. Please try again.', 'error'); 
+            } finally {
+                if(btn) { btn.disabled = false; btn.innerHTML = originalText; }
+            }
         }
 
-        function openLatestProphecy() { const latest = STATE.prophecies[0]; if (latest) navigate('single', latest.id); else showToast('No prophecies available yet', 'error'); }
+        function openLatestProphecy() { const latest = STATE.prophecies[0]; if (latest) navigate('single', latest.id); else showToast('No prophecies available yet', 'warning'); }
         function formatDate(dateStr) { return dateStr ? new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''; }
 
         // Window Exports for DOM Event Bindings
