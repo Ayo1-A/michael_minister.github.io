@@ -1,1605 +1,1511 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- Playables SDK -->
+<script>// Playables SDK v1.0.0
+(function() {
+  'use strict';
+  if (window.playablesSDK) return;
+
+  var HANDLER_NAME = 'playablesGameEventHandler';
+  var ANDROID_BRIDGE_NAME = '_MetaPlayablesBridge';
+  var RAF_FRAME_THRESHOLD = 3;
+
+  var gameReadySent = false;
+  var firstInteractionSent = false;
+  var errorSent = false;
+  var frameCount = 0;
+  var originalRAF = window.requestAnimationFrame;
+
+  function hasIOSBridge() { return !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers[HANDLER_NAME]); }
+  function hasAndroidBridge() { return !!(window[ANDROID_BRIDGE_NAME] && typeof window[ANDROID_BRIDGE_NAME].postEvent === 'function'); }
+  function isInIframe() { return !!(window.parent && window.parent !== window); }
+
+  function sendEvent(eventName, payload) {
+    var message = { type: eventName, payload: payload || {}, timestamp: Date.now() };
+    if (hasIOSBridge()) { try { window.webkit.messageHandlers[HANDLER_NAME].postMessage(message); } catch (e) { } return; }
+    if (hasAndroidBridge()) {
+      try {
+        var p = payload || {}; p.__secureToken = window.__fbAndroidBridgeAuthToken || ''; p.timestamp = message.timestamp;
+        window[ANDROID_BRIDGE_NAME].postEvent(eventName, JSON.stringify(p));
+      } catch (e) { } return;
+    }
+    if (isInIframe()) { try { window.parent.postMessage(message, '*'); } catch (e) { } return; }
+  }
+
+  function onFrame() {
+    if (gameReadySent) return;
+    frameCount++;
+    if (frameCount >= RAF_FRAME_THRESHOLD) { gameReadySent = true; sendEvent('game_ready', { frame_count: frameCount, detected_at: Date.now() }); return; }
+    originalRAF.call(window, onFrame);
+  }
+
+  if (originalRAF) {
+    window.requestAnimationFrame = function(callback) {
+      if (!gameReadySent) {
+        return originalRAF.call(window, function(timestamp) {
+          frameCount++;
+          if (frameCount >= RAF_FRAME_THRESHOLD && !gameReadySent) { gameReadySent = true; sendEvent('game_ready', { frame_count: frameCount, detected_at: Date.now() }); }
+          callback(timestamp);
+        });
+      }
+      return originalRAF.call(window, callback);
+    };
+  }
+
+  function setupFirstInteractionDetection() {
+    var events =['touchstart', 'mousedown', 'keydown'];
+    function onFirstInteraction() {
+      if (firstInteractionSent) return; firstInteractionSent = true; sendEvent('user_interaction_start', null);
+      for (var i = 0; i < events.length; i++) { document.removeEventListener(events[i], onFirstInteraction, true); }
+    }
+    for (var i = 0; i < events.length; i++) { document.addEventListener(events[i], onFirstInteraction, true); }
+  }
+
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', setupFirstInteractionDetection); } else { setupFirstInteractionDetection(); }
+
+  window.addEventListener('error', function(event) {
+    if (errorSent) return; errorSent = true;
+    sendEvent('error', { message: event.message || 'Unknown error', source: event.filename || '', lineno: event.lineno || 0, colno: event.colno || 0, auto_captured: true });
+  });
+
+  window.addEventListener('unhandledrejection', function(event) {
+    if (errorSent) return; errorSent = true; var reason = event.reason;
+    sendEvent('error', { message: (reason instanceof Error) ? reason.message : String(reason), type: 'unhandled_promise_rejection', auto_captured: true });
+  });
+
+  window.playablesSDK = {
+    complete: function(score) { sendEvent('game_ended', { score: score, completed: true }); },
+    error: function(message) { if (errorSent) return; errorSent = true; sendEvent('error', { message: message || 'Unknown error', auto_captured: false }); },
+    sendEvent: function(eventName, payload) { if (!eventName || typeof eventName !== 'string') return; sendEvent(eventName, payload); }
+  };
+
+  if (originalRAF) { originalRAF.call(window, onFrame); }
+})();</script>
+<script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProImage Pro — Enterprise Edition</title>
-    
-    <!-- Professional Font Libraries -->
+    <title>Gospel Prophecy Message - By Minister Michael</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Space+Grotesk:wght@400;600;700&family=Montserrat:wght@400;500;600;700&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,700;1,400&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <!-- html2canvas for High-Res Image Generation -->
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
+    
     <style>
         :root {
-            /* UI Theme Colors */
-            --bg-body: #0f172a;
-            --bg-panel: #1e293b;
-            --border-color: #334155;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent-color: #6366f1;
-            --accent-hover: #4f46e5;
+            --primary: #6d28d9;
+            --primary-light: #ede9fe;
+            --primary-dark: #5b21b6;
+            --dark: #0f172a;
+            --gray: #64748b;
+            --gray-light: #94a3b8;
+            --bg: #f8fafc;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --success: #059669;
+            --warning: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--dark); line-height: 1.6; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+        h1, h2, h3, .font-display { font-family: 'Playfair Display', serif; }
+
+        /* Header */
+        .header { background: var(--white); border-bottom: 1px solid var(--border); padding: 14px 24px; position: sticky; top: 0; z-index: 60; backdrop-filter: blur(10px); }
+        .header-inner { max-width: 1440px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo-icon { width: 44px; height: 44px; background: var(--primary-light); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 20px; position: relative;}
+        .logo-title { font-weight: 700; font-size: 17px; color: var(--dark); line-height: 1.2; }
+        .logo-sub { font-size: 12px; color: var(--gray); margin-top: 1px; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+
+        /* Connection Status */
+        .connection-indicator { position: absolute; bottom: -2px; right: -2px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; background: var(--gray-light); transition: background 0.3s ease; }
+        .connection-indicator.online { background: var(--success); }
+        .connection-indicator.offline { background: var(--warning); }
+
+        /* Standard Buttons */
+        .btn { padding: 9px 18px; border-radius: 12px; font-weight: 500; font-size: 14px; cursor: pointer; border: none; transition: all 0.2s; font-family: 'Inter', sans-serif; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(109, 40, 217, 0.2); }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(109, 40, 217, 0.3); }
+        .btn-ghost { background: transparent; color: var(--gray); }
+        .btn-ghost:hover { background: var(--bg); color: var(--dark); }
+        .btn-outline { background: white; border: 1.5px solid var(--border); color: var(--dark); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* Dynamic Special Buttons */
+        .btn-hero { background: linear-gradient(135deg, var(--primary) 0%, #9333ea 100%); color: white; padding: 16px 32px; border-radius: 16px; font-weight: 700; font-size: 16px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 12px; box-shadow: 0 10px 25px rgba(109,40,217,0.4); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-hero:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 15px 35px rgba(109,40,217,0.5); background: linear-gradient(135deg, var(--primary-dark) 0%, #7e22ce 100%); }
+        .btn-maintenance { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 16px 32px; border-radius: 16px; font-weight: 700; font-size: 16px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 12px; box-shadow: 0 10px 25px rgba(239,68,68,0.4); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-maintenance:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 15px 35px rgba(239,68,68,0.5); background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); }
+
+        .user-menu { position: relative; }
+        .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 15px; cursor: pointer; transition: transform 0.2s; }
+        .avatar:hover { transform: scale(1.05); }
+        .user-dropdown { position: absolute; right: 0; top: 48px; background: white; border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); padding: 8px; min-width: 180px; display: none; z-index: 50; border: 1px solid var(--border); }
+        .user-dropdown.active { display: block; }
+        .user-info { padding: 10px 12px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+        .user-name { font-weight: 600; font-size: 14px; }
+        .user-email { font-size: 12px; color: var(--gray); }
+        .dropdown-item { width: 100%; padding: 9px 12px; border-radius: 8px; background: none; border: none; text-align: left; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 10px; color: var(--dark); }
+        .dropdown-item:hover { background: var(--bg); }
+
+        /* Layout */
+        .app-layout { max-width: 1440px; margin: 0 auto; padding: 24px; display: grid; grid-template-columns: 240px 1fr 340px; gap: 24px; align-items: start; transition: all 0.3s; }
+
+        /* Left Sidebar */
+        .left-sidebar { background: var(--white); border-radius: 24px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); position: sticky; top: 92px; height: calc(100vh - 116px); display: flex; flex-direction: column; z-index: 40;}
+        .nav { display: flex; flex-direction: column; gap: 6px; }
+        .nav-btn { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 14px; color: var(--gray); font-weight: 500; font-size: 15px; transition: all 0.2s; background: none; border: none; cursor: pointer; width: 100%; text-align: left; font-family: 'Inter', sans-serif; position: relative; }
+        .nav-btn i { width: 22px; text-align: center; font-size: 18px; }
+        .nav-btn:hover { background: var(--bg); color: var(--dark); }
+        .nav-btn.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+        .sidebar-bottom { margin-top: auto; }
+
+        .quote-box { background: linear-gradient(135deg, #f8fafc 0%, #ede9fe 100%); border: 1px solid #ddd6fe; border-radius: 18px; padding: 18px; margin-bottom: 16px; }
+        .quote-text { font-size: 13px; color: #4338ca; font-style: italic; line-height: 1.5; }
+        .quote-ref { font-size: 12px; color: var(--primary); font-weight: 600; margin-top: 8px; }
+        .follow-us { margin-bottom: 12px; }
+        .follow-label { font-size: 12px; color: var(--gray); margin-bottom: 8px; font-weight: 500; }
+        .social-icons { display: flex; gap: 10px; }
+        .social-icons a { width: 34px; height: 34px; border-radius: 10px; background: var(--white); border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--gray); transition: all 0.2s; font-size: 15px; text-decoration: none; }
+        .social-icons a:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+        .copyright { font-size: 11px; color: var(--gray-light); line-height: 1.4; margin-top: 12px;}
+
+        /* Center Content */
+        .center-content { min-width: 0; transition: all 0.3s; }
+        .hero { position: relative; border-radius: 24px; overflow: hidden; min-height: 320px; display: flex; align-items: flex-end; margin-bottom: 28px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .hero-bg { position: absolute; inset: 0; z-index: 0; }
+        .hero-bg img { width: 100%; height: 100%; object-fit: cover; }
+        .hero-overlay { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(15,23,42,0.92) 0%, rgba(15,23,42,0.75) 50%, rgba(15,23,42,0.4) 100%); z-index: 1; }
+        .hero-content { position: relative; z-index: 2; padding: 48px; max-width: 560px; color: white; }
+        .hero-title { font-size: clamp(32px, 4vw, 46px); line-height: 1.1; font-weight: 800; margin-bottom: 14px; letter-spacing: -0.5px; }
+        .hero-title span { color: #c4b5fd; display: block; }
+        .hero-sub { font-size: 16px; color: #e2e8f0; margin-bottom: 26px; line-height: 1.6; }
+
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+        .section-title { display: flex; align-items: center; gap: 12px; font-size: 22px; font-weight: 700; }
+        .section-icon { width: 40px; height: 40px; border-radius: 12px; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .view-all { color: var(--primary); font-size: 14px; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px; transition: all 0.2s; }
+        .view-all:hover { background: var(--primary-light); }
+
+        .testimonies-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .testimony-card { background: var(--white); border-radius: 20px; padding: 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); border: 1px solid #f1f5f9; position: relative; transition: all 0.3s; cursor: pointer; }
+        .testimony-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(0,0,0,0.08); border-color: var(--primary-light); }
+        .testimony-quote { position: absolute; top: 18px; right: 20px; color: var(--primary-light); font-size: 28px; opacity: 0.8; }
+        .testimony-text { font-size: 14px; color: #334155; line-height: 1.65; margin-bottom: 18px; padding-right: 24px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .testimony-footer { display: flex; align-items: center; gap: 12px; }
+        .testimony-avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 14px; flex-shrink: 0; }
+        .testimony-name { font-weight: 600; font-size: 14px; color: var(--dark); line-height: 1.2; }
+        .testimony-date { font-size: 12px; color: var(--gray); margin-top: 2px; }
+
+        /* Right Sidebar */
+        .right-sidebar { background: var(--white); border-radius: 24px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); position: sticky; top: 92px; max-height: calc(100vh - 116px); display: flex; flex-direction: column; z-index: 40; transition: all 0.3s;}
+        .sidebar-header { margin-bottom: 16px; }
+        .sidebar-title { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+        .sidebar-title i { color: var(--primary); }
+        .sidebar-subtitle { font-size: 13px; color: var(--gray); }
+        .search-wrap { position: relative; margin-bottom: 18px; }
+        .search-wrap i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray-light); font-size: 14px; }
+        .search-input { width: 100%; padding: 11px 14px 11px 38px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 14px; background: var(--bg); outline: none; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .search-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(109,40,217,0.1); }
+        
+        .prophecy-list { overflow-y: auto; flex: 1; margin: 0 -6px; padding: 0 6px; display: flex; flex-direction: column; gap: 14px; }
+        .prophecy-list::-webkit-scrollbar { width: 4px; }
+        .prophecy-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        .prophecy-card { padding: 14px; border: 1.5px solid #f1f5f9; border-radius: 18px; background: white; transition: all 0.25s; cursor: pointer; }
+        .prophecy-card:hover { border-color: var(--primary-light); box-shadow: 0 6px 20px rgba(109,40,217,0.1); transform: translateY(-2px); }
+        .p-card-top { display: flex; gap: 12px; margin-bottom: 12px; }
+        .p-thumb { width: 74px; height: 74px; border-radius: 12px; object-fit: cover; flex-shrink: 0; }
+        .p-content { flex: 1; min-width: 0; }
+        .p-date { font-size: 11px; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .p-title { font-weight: 600; font-size: 14px; line-height: 1.35; margin: 4px 0 6px; color: var(--dark); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .p-meta { display: flex; gap: 14px; font-size: 12px; color: var(--gray); }
+        .p-meta span { display: flex; align-items: center; gap: 4px; }
+        .btn-read { width: 100%; background: var(--primary-light); color: var(--primary); border: none; padding: 9px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .btn-read:hover { background: var(--primary); color: white; }
+
+        /* Single Prophecy View */
+        .single-view { background: white; border-radius: 24px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+        .back-btn { display: inline-flex; align-items: center; gap: 8px; color: var(--gray); background: none; border: none; cursor: pointer; font-size: 14px; font-weight: 500; margin-bottom: 20px; padding: 8px 12px; border-radius: 10px; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .back-btn:hover { background: var(--bg); color: var(--dark); }
+        .single-img { width: 100%; height: 380px; object-fit: cover; border-radius: 20px; margin-bottom: 24px; }
+        .single-meta { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
+        .single-date { background: var(--primary-light); color: var(--primary); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .single-read { color: var(--gray); font-size: 13px; display: flex; align-items: center; gap: 6px; }
+        .single-title { font-size: 34px; font-weight: 800; line-height: 1.2; margin-bottom: 20px; letter-spacing: -0.5px; }
+        .single-body { font-size: 16px; line-height: 1.8; color: #334155; margin-bottom: 32px; }
+        .single-body p { margin-bottom: 16px; }
+        .single-body h3 { font-size: 20px; margin: 28px 0 12px; color: var(--dark); }
+        .single-body blockquote { border-left: 4px solid var(--primary); padding: 16px 20px; background: var(--primary-light); border-radius: 0 12px 12px 0; margin: 20px 0; font-style: italic; color: #4338ca; font-weight: 500; }
+        
+        .single-actions { display: flex; gap: 12px; padding: 20px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-bottom: 32px; flex-wrap: wrap; }
+        .action-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 12px; border: 1.5px solid var(--border); background: white; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .action-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+        .action-btn.liked { background: var(--primary); color: white; border-color: var(--primary); }
+        .action-btn.liked i { font-weight: 900; }
+        
+        .comments-section h3 { font-size: 20px; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
+        .comment-form { background: var(--bg); padding: 18px; border-radius: 16px; margin-bottom: 24px; border: 1.5px solid var(--border); }
+        .comment-form textarea { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 12px; font-family: 'Inter', sans-serif; font-size: 14px; resize: vertical; min-height: 90px; outline: none; transition: all 0.2s; background: white; }
+        .comment-form textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(109,40,217,0.1); }
+        .comment-form-footer { display: flex; justify-content: flex-end; margin-top: 12px; }
+        
+        .comment-list { display: flex; flex-direction: column; gap: 16px; }
+        .comment-item { display: flex; gap: 12px; padding: 18px; background: var(--bg); border-radius: 16px; border: 1px solid var(--border); }
+        .comment-avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 15px; }
+        .comment-content { flex: 1; }
+        .comment-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .comment-name { font-weight: 600; font-size: 14px; }
+        .comment-date { font-size: 12px; color: var(--gray); }
+        .comment-text { font-size: 14px; line-height: 1.6; color: #334155; }
+        
+        .login-prompt { text-align: center; padding: 24px; background: var(--primary-light); border-radius: 16px; color: #4338ca; border: 1px solid #ddd6fe;}
+        .login-prompt a { color: var(--primary); font-weight: 600; cursor: pointer; text-decoration: underline; }
+
+        /* Support Chat Styling */
+        .chat-container { display: flex; flex-direction: column; height: calc(100vh - 120px); max-height: 700px; background: white; border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid var(--border); }
+        .chat-header { padding: 20px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; font-weight: 600; z-index: 10; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; background: var(--bg); scroll-behavior: smooth; }
+        .chat-messages::-webkit-scrollbar { width: 4px; }
+        .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        .chat-bubble { max-width: 75%; padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.5; position: relative; word-wrap: break-word; }
+        .chat-bubble.user { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 4px; box-shadow: 0 4px 12px rgba(109, 40, 217, 0.2); }
+        .chat-bubble.admin { align-self: flex-start; background: white; color: var(--dark); border-bottom-left-radius: 4px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+        .chat-time { font-size: 10px; margin-top: 6px; opacity: 0.8; display: block; text-align: right; }
+        .chat-input-area { padding: 16px 20px; background: white; border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-end; z-index: 10; }
+        .chat-input { flex: 1; padding: 14px 20px; border: 1.5px solid var(--border); border-radius: 24px; font-size: 14px; outline: none; transition: border-color 0.2s; font-family: 'Inter', sans-serif; resize: none; max-height: 120px; overflow-y: auto; }
+        .chat-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(109,40,217,0.1); }
+        .chat-send-btn { width: 48px; height: 48px; flex-shrink: 0; border-radius: 50%; background: var(--primary); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 4px 12px rgba(109, 40, 217, 0.2); font-size: 16px; }
+        .chat-send-btn:hover { background: var(--primary-dark); transform: scale(1.05); }
+        .chat-send-btn:disabled { background: var(--gray-light); cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* Page Views */
+        .page-header { margin-bottom: 24px; }
+        .page-title { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+        .page-subtitle { color: var(--gray); font-size: 15px; }
+        
+        .prophecies-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .prophecy-card-large { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; transition: all 0.3s; cursor: pointer; }
+        .prophecy-card-large:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.1); }
+        .prophecy-card-large img { width: 100%; height: 180px; object-fit: cover; }
+        .prophecy-card-large-content { padding: 18px; }
+
+        /* Footer */
+        .footer { background: var(--dark); color: white; margin-top: 48px; padding: 28px 0; position: relative; z-index: 10; }
+        .footer-inner { max-width: 1440px; margin: 0 auto; padding: 0 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .footer-brand { font-weight: 700; font-size: 16px; }
+        .footer-brand span { color: #a78bfa; font-weight: 500; margin-left: 6px; }
+
+        /* Modals & Z-Index Architecture */
+        .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px); z-index: 110; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .modal.active { opacity: 1; pointer-events: all; }
+        .modal-content { background: white; border-radius: 24px; padding: 32px; width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); transform: translateY(20px); transition: transform 0.3s; max-height: 90vh; overflow-y: auto; position: relative;}
+        .modal.active .modal-content { transform: translateY(0); }
+        
+        /* Specialized Share Modal Override */
+        .share-modal-content { max-width: 500px !important; padding: 24px !important; }
+        .preview-img-wrapper { width: 100%; max-height: 400px; overflow: hidden; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; display: flex; align-items: center; justify-content: center; background: var(--bg); }
+        .preview-img-wrapper img { width: 100%; height: auto; object-fit: contain; }
+
+        .modal-header { text-align: center; margin-bottom: 24px; }
+        .modal-title { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+        .modal-subtitle { color: var(--gray); font-size: 14px; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--dark); }
+        .form-input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 14px; outline: none; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(109,40,217,0.1); }
+        .modal-footer { text-align: center; margin-top: 20px; font-size: 14px; color: var(--gray); }
+        .modal-footer a { color: var(--primary); font-weight: 600; cursor: pointer; text-decoration: none; }
+        .modal-footer a:hover { text-decoration: underline; }
+        .close-modal { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--bg); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--gray); transition: all 0.2s; z-index: 10;}
+        .close-modal:hover { background: var(--border); color: var(--dark); }
+
+        /* Export Canvas (Hidden offscreen for html2canvas to process) */
+        .export-canvas-wrapper { position: absolute; left: -9999px; top: -9999px; width: 1080px; min-height: 1080px; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); display: flex; flex-direction: column; }
+        .export-inner { padding: 80px; display: flex; flex-direction: column; height: 100%; flex: 1; border: 24px solid white; box-shadow: inset 0 0 0 1px #e2e8f0; }
+        .export-header { display: flex; align-items: center; gap: 24px; margin-bottom: 50px; }
+        .export-logo-box { width: 80px; height: 80px; background: #ede9fe; border-radius: 20px; display: flex; align-items: center; justify-content: center; color: #6d28d9; font-size: 36px; }
+        .export-header-text h2 { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 32px; color: #0f172a; margin: 0; line-height: 1.1; }
+        .export-header-text p { font-family: 'Inter', sans-serif; font-size: 20px; color: #64748b; margin: 4px 0 0 0; }
+        .export-featured-img { width: 100%; height: 500px; object-fit: cover; border-radius: 24px; margin-bottom: 50px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .export-content { display: flex; flex-direction: column; flex: 1; }
+        .export-date { font-family: 'Inter', sans-serif; font-size: 20px; color: #6d28d9; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; }
+        .export-title { font-family: 'Playfair Display', serif; font-size: 64px; font-weight: 900; line-height: 1.15; color: #0f172a; margin-bottom: 40px; letter-spacing: -1px; }
+        
+        /* Auto-adjusting Typography for the body */
+        .export-body { font-family: 'Inter', sans-serif; color: #334155; margin-bottom: 60px; white-space: pre-wrap; word-wrap: break-word;}
+        .export-body p { margin-bottom: 1.5em; }
+        .export-body blockquote { border-left: 8px solid #6d28d9; padding-left: 30px; margin: 30px 0; font-style: italic; color: #4338ca; font-weight: 600; }
+        
+        .export-footer { margin-top: auto; border-top: 3px solid #e2e8f0; padding-top: 40px; text-align: center; }
+        .export-footer-text { font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 600; color: #94a3b8; }
+        .export-footer-text span { color: #6d28d9; font-weight: 800; }
+
+        /* Toast */
+        .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 200; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: white; padding: 14px 18px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; min-width: 280px; transform: translateX(calc(100% + 24px)); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-left: 4px solid var(--success); }
+        .toast.show { transform: translateX(0); }
+        .toast i { color: var(--success); font-size: 18px; }
+        .toast.error { border-left-color: var(--warning); }
+        .toast.error i { color: var(--warning); }
+        .toast.loading { border-left-color: var(--primary); }
+        .toast.loading i { color: var(--primary); animation: spin 1s linear infinite; }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        /* RESTRICTED STATES: Account Suspension & Maintenance Mode Jail */
+        body.suspended-mode .left-sidebar .nav-btn:not([data-page="contact"]),
+        body.maintenance-mode .left-sidebar .nav-btn:not([data-page="contact"]) { display: none !important; }
+        
+        body.suspended-mode .left-sidebar .quote-box,
+        body.maintenance-mode .left-sidebar .quote-box { display: none !important; }
+        
+        body.suspended-mode .right-sidebar,
+        body.maintenance-mode .right-sidebar { display: none !important; }
+        
+        body.suspended-mode #openRight,
+        body.maintenance-mode #openRight { display: none !important; } 
+        
+        body.suspended-mode .app-layout,
+        body.maintenance-mode .app-layout { grid-template-columns: 240px 1fr; }
+        
+        .suspended-container {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 60vh; background: white; border-radius: 24px; padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--warning);
+        }
+        .suspended-icon {
+            width: 80px; height: 80px; background: #fef2f2; color: var(--warning);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 36px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
+        }
+        .suspended-title {
+            font-size: 28px; font-weight: 800; margin-bottom: 12px; color: var(--dark); letter-spacing: -0.5px;
+        }
+        .suspended-text {
+            font-size: 16px; color: var(--gray); margin-bottom: 32px; max-width: 420px; line-height: 1.6;
+        }
+
+        /* Mobile Adjustments & Fixes */
+        .mobile-only { display: none !important; }
+        .menu-btn { width: 38px; height: 38px; border-radius: 10px; background: var(--bg); border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--dark); transition: all 0.2s; }
+        .menu-btn:hover { border-color: var(--primary); color: var(--primary); }
+        
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 90; opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(2px); cursor: pointer; }
+        .overlay.active { opacity: 1; pointer-events: all; }
+
+        @media (max-width: 1023px) {
+            .mobile-only { display: flex !important; }
+            .app-layout { grid-template-columns: 1fr; padding: 16px; gap: 0; }
             
-            /* Dynamic Canvas Variables */
-            --cvs-bg: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
-            --cvs-padding: 40px;
-            --cvs-radius: 16px;
-            --cvs-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-            --cvs-font: 'Inter', sans-serif;
-            --cvs-color: #111827;
-            --cvs-line-height: 1.8;
-            --cvs-card-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            body.suspended-mode .app-layout,
+            body.maintenance-mode .app-layout { grid-template-columns: 1fr; }
             
-            /* Auto-Fit Scale Engine Core Variable */
-            --content-scale: 1;
+            .left-sidebar { padding-top: max(20px, env(safe-area-inset-top)); position: fixed; left: 0; top: 0; bottom: 0; width: 280px; z-index: 100; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-radius: 0 24px 24px 0; height: 100vh; box-shadow: 10px 0 40px rgba(0,0,0,0.15); overflow-y: auto;}
+            .left-sidebar.open { transform: translateX(0); }
             
-            /* Enterprise Extras */
-            --modal-backdrop: rgba(15, 23, 42, 0.92);
+            .right-sidebar { padding-top: max(20px, env(safe-area-inset-top)); position: fixed; right: 0; top: 0; bottom: 0; width: 340px; max-width: 90vw; z-index: 100; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-radius: 24px 0 0 24px; height: 100vh; box-shadow: -10px 0 40px rgba(0,0,0,0.15); overflow-y: auto; }
+            .right-sidebar.open { transform: translateX(0); }
+            
+            .sidebar-mobile-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+            
+            .hero-content { padding: 32px 24px; }
+            .testimonies-grid { grid-template-columns: 1fr; }
+            .single-view { padding: 24px 20px; }
+            .single-img { height: 240px; }
+            .single-title { font-size: 26px; }
+            .chat-container { height: calc(100vh - 160px); }
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'Inter', sans-serif; 
-            background-color: var(--bg-body);
-            color: var(--text-main); 
-            height: 100vh; 
-            overflow: hidden;
+        @media (max-width: 640px) {
+            .header { padding: 12px 16px; }
+            .logo-title { font-size: 15px; }
+            .logo-sub { display: none; }
+            .prophecies-grid { grid-template-columns: 1fr; }
+            .export-canvas-wrapper { width: 1080px; } 
         }
 
-        /* ==================== UPGRADED AUTH SCREEN ==================== */
-        #auth-screen {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 99999;
-            transition: opacity 0.4s ease;
-            overflow: hidden;
-        }
-        
-        /* Subtle animated background grid */
-        #auth-screen::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
-            background-size: 60px 60px;
-            animation: gridMove 25s linear infinite;
-            z-index: 1;
-            opacity: 0.6;
-        }
-        
-        @keyframes gridMove {
-            0% { background-position: 0 0; }
-            100% { background-position: 60px 60px; }
-        }
-        
-        .auth-card {
-            background: rgba(30, 41, 59, 0.95);
-            backdrop-filter: blur(20px);
-            width: 100%;
-            max-width: 460px;
-            border-radius: 28px;
-            box-shadow: 0 30px 70px -15px rgba(99, 102, 241, 0.4),
-                        0 0 0 1px rgba(255,255,255,0.1) inset;
-            padding: 52px 42px;
-            position: relative;
-            z-index: 2;
-            border: 1px solid rgba(99, 102, 241, 0.2);
-        }
-        
-        .auth-header {
-            text-align: center;
-            margin-bottom: 36px;
-        }
-        
-        .auth-header .brand {
-            font-size: 2.4rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 14px;
-            color: white;
-            letter-spacing: -1px;
-        }
-        
-        .auth-header .brand i {
-            background: linear-gradient(90deg, #6366f1, #a5b4fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 2.6rem;
-        }
-        
-        .auth-header p {
-            color: var(--text-muted);
-            margin-top: 10px;
-            font-size: 1rem;
-            font-weight: 500;
-        }
-        
-        .auth-tabs {
-            display: flex;
-            background: rgba(15, 23, 42, 0.8);
-            border-radius: 16px;
-            padding: 6px;
-            margin-bottom: 32px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-        
-        .auth-tab {
-            flex: 1;
-            padding: 14px 20px;
-            text-align: center;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-size: 1.02rem;
-        }
-        
-        .auth-tab.active {
-            background: var(--accent-color);
-            color: white;
-            box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
-            transform: translateY(-1px);
-        }
-        
-        .form-group {
-            margin-bottom: 22px;
-            position: relative;
-        }
-        
-        .form-group label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 500;
-            margin-bottom: 8px;
-            color: var(--text-muted);
-        }
-        
-        .form-control {
-            width: 100%; 
-            padding: 16px 20px 16px 52px; 
-            background: rgba(15, 23, 42, 0.85); 
-            border: 1px solid var(--border-color);
-            color: white; 
-            border-radius: 14px; 
-            font-size: 1.02rem; 
-            font-family: inherit; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .form-control:focus {
-            outline: none; 
-            border-color: var(--accent-color);
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.25);
-            transform: translateY(-1px);
-        }
-        
-        /* Input icons */
-        .form-group .input-icon {
-            position: absolute;
-            left: 20px;
-            top: 48px;
-            color: var(--text-muted);
-            font-size: 1.1rem;
-            transition: all 0.3s;
-        }
-        
-        .form-control:focus + .input-icon,
-        .form-control:not(:placeholder-shown) + .input-icon {
-            color: var(--accent-color);
-        }
-        
-        .btn-auth {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(90deg, var(--accent-color), var(--accent-hover));
-            color: white;
-            border: none;
-            border-radius: 14px;
-            font-size: 1.08rem;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 8px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
-        }
-        
-        .btn-auth:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.45);
-        }
-        
-        .auth-footer {
-            text-align: center;
-            margin-top: 28px;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            line-height: 1.5;
-        }
-        
-        .error-msg {
-            color: #ef4444;
-            font-size: 0.85rem;
-            margin-top: 6px;
-            display: none;
-            font-weight: 500;
-        }
-
-        /* ==================== DASHBOARD + EDITOR LAYOUT (unchanged) ==================== */
-        #dashboard-view, #editor-view {
-            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .dashboard-header {
-            padding: 24px 32px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-        }
-        
-        .dashboard-header h1 {
-            font-size: 1.75rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-        }
-        
-        .dashboard-tools {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex: 1;
-            max-width: 520px;
-        }
-        
-        .search-input {
-            flex: 1;
-            background: #0f172a;
-            border: 1px solid var(--border-color);
-            border-radius: 9999px;
-            padding: 10px 20px;
-            color: white;
-            font-size: 0.95rem;
-        }
-        
-        .projects-grid {
-            padding: 32px;
-            flex: 1;
-            overflow-y: auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 24px;
-        }
-        
-        .project-card {
-            background: var(--bg-panel);
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .project-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 25px 50px rgba(99, 102, 241, 0.25);
-        }
-        
-        .project-card .preview {
-            height: 160px;
-            background: var(--cvs-bg);
-            border-radius: 12px;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            color: rgba(255,255,255,0.3);
-            position: relative;
-        }
-        
-        .project-card .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-        
-        .project-name {
-            font-size: 1.25rem;
-            font-weight: 600;
-            line-height: 1.3;
-        }
-        
-        .project-date {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        /* Modal System */
-        .modal {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: var(--modal-backdrop);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 100000;
-        }
-        
-        .modal-content {
-            background: var(--bg-panel);
-            width: 100%;
-            max-width: 580px;
-            border-radius: 20px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
-            overflow: hidden;
-        }
-        
-        .modal-header {
-            padding: 24px 28px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .modal-body {
-            padding: 28px;
-            max-height: 70vh;
-            overflow-y: auto;
-        }
-
-        /* Toast (enhanced) */
-        .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            background: var(--bg-panel);
-            color: white;
-            padding: 14px 24px;
-            border-radius: 9999px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-            display: none;
-            align-items: center;
-            gap: 12px;
-            z-index: 99999;
-            animation: toastPop 0.3s ease forwards;
-        }
-        
-        @keyframes toastPop {
-            0% { transform: translateY(20px); opacity: 0; }
-            100% { transform: translateY(0); opacity: 1; }
-        }
-
-        /* All original styles preserved exactly */
-        .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 600; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
-        .btn-primary { background: var(--accent-color); color: white; }
-        .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); transform: translateY(-1px); }
-        .btn-secondary { background: var(--border-color); color: white; }
-        .btn-secondary:hover { background: #475569; }
-        
-        .btn-icon { padding: 8px; background: transparent; color: var(--text-muted); border-radius: 6px; cursor: pointer; border: none; transition: 0.2s;}
-        .btn-icon:hover { color: white; background: var(--border-color); }
-        .btn-icon.active { color: var(--accent-color); background: rgba(99, 102, 241, 0.15); }
-
-        .topbar {
-            height: 65px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color);
-            display: flex; justify-content: space-between; align-items: center; padding: 0 24px; z-index: 100;
-        }
-        .brand-section { display: flex; align-items: center; gap: 15px; }
-        .toggle-sidebar-btn { font-size: 1.2rem; color: var(--text-main); }
-        .brand { font-size: 1.25rem; font-weight: 700; color: white; display: flex; align-items: center; gap: 10px; }
-        .brand i { color: var(--accent-color); }
-
-        .main-wrapper { display: flex; height: calc(100vh - 65px); width: 100%; position: relative; }
-
-        .sidebar {
-            width: 320px; 
-            background: var(--bg-panel); 
-            border-right: 1px solid var(--border-color);
-            display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden;
-            flex-shrink: 0;
-            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .sidebar.collapsed { width: 0; border-right: none; }
-        .sidebar-content { width: 320px; opacity: 1; transition: opacity 0.2s; padding-bottom: 30px; }
-        .sidebar.collapsed .sidebar-content { opacity: 0; pointer-events: none; }
-
-        .control-group { padding: 20px; border-bottom: 1px solid var(--border-color); }
-        .control-group h3 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 15px; }
-        
-        .setting-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
-        .setting-row label { font-size: 0.85rem; font-weight: 500; display: flex; justify-content: space-between; align-items: center; }
-        .setting-row label span.val { color: var(--text-main); background: #0f172a; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; border: 1px solid var(--border-color); }
-        
-        .form-control {
-            width: 100%; padding: 10px; background: #0f172a; border: 1px solid var(--border-color);
-            color: white; border-radius: 6px; font-size: 0.85rem; font-family: inherit; transition: border 0.2s;
-        }
-        .form-control:focus { outline: none; border-color: var(--accent-color); }
-        
-        input[type="range"] {
-            -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; background: var(--border-color); outline: none; margin: 10px 0;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent-color); cursor: pointer; transition: 0.2s;
-        }
-        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
-        
-        .gradient-presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .grad-btn { height: 40px; border-radius: 6px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s, border 0.2s; }
-        .grad-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-
-        .workspace {
-            flex-grow: 1; background: #0b1120; position: relative; overflow: auto;
-            display: flex; justify-content: center; align-items: flex-start; padding: 80px 40px;
-        }
-        
-        .text-toolbar {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1);
-            padding: 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px; z-index: 50;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .toolbar-divider { width: 1px; height: 24px; background: var(--border-color); margin: 0 5px; }
-
-        #export-wrapper {
-            position: relative; transition: width 0.3s ease, padding 0.3s ease;
-            box-shadow: var(--cvs-shadow); border-radius: var(--cvs-radius);
-            display: flex; align-items: center; justify-content: center; margin: 0 auto;
-        }
-
-        #export-canvas {
-            background: var(--cvs-bg);
-            padding: var(--cvs-padding);
-            border-radius: var(--cvs-radius);
-            width: 100%; height: 100%; min-width: 400px; min-height: 400px;
-            display: flex; flex-direction: column; overflow: hidden; position: relative;
-        }
-
-        .rich-editor {
-            flex-grow: 1; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: calc(var(--cvs-radius) / 1.5);
-            padding: 40px; outline: none;
-            font-family: var(--cvs-font); color: var(--cvs-color);
-            font-size: calc(1.15rem * var(--content-scale)); 
-            line-height: var(--cvs-line-height); 
-            overflow-y: hidden;
-            word-break: break-word;
-            box-shadow: var(--cvs-card-shadow); 
-            transition: box-shadow 0.3s ease;
-        }
-
-        .rich-editor h1 { font-size: calc(2.8rem * var(--content-scale)); margin-bottom: calc(20px * var(--content-scale)); line-height: 1.1; letter-spacing: -0.02em; }
-        .rich-editor h2 { font-size: calc(1.8rem * var(--content-scale)); margin-bottom: calc(15px * var(--content-scale)); line-height: 1.3; }
-        .rich-editor p { margin-bottom: calc(20px * var(--content-scale)); }
-        .rich-editor ul, .rich-editor ol { margin-bottom: calc(15px * var(--content-scale)); margin-left: calc(20px * var(--content-scale)); }
-        .rich-editor mark { background-color: #fef08a; padding: 0 4px; border-radius: 3px; }
-        
-        .rich-editor img {
-            max-width: calc(100% * var(--content-scale)); 
-            height: auto; 
-            border-radius: 8px;
-            margin: calc(10px * var(--content-scale)) auto; 
-            vertical-align: middle;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-            transition: outline 0.15s ease-in-out;
-            cursor: pointer;
-            box-sizing: border-box;
-        }
-
-        .rich-editor img.active-image {
-            outline: 4px solid var(--accent-color);
-            outline-offset: 3px;
-        }
-
-        .watermark-footer {
-            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
-            margin-top: 15px; padding-top: 15px; border-top: 1px solid currentColor;
-            font-family: var(--cvs-font); color: var(--cvs-color);
-            font-size: 0.75rem; font-weight: 500; opacity: 0.65; flex-shrink: 0; transition: color 0.3s ease;
-        }
-
-        .image-toolbar {
-            position: fixed; background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.15); padding: 10px 15px; border-radius: 12px;
-            display: flex; align-items: center; gap: 12px; z-index: 200; box-shadow: 0 15px 40px rgba(0,0,0,0.6);
-            opacity: 0; pointer-events: none; transform: translateY(-10px);
-            transition: opacity 0.2s ease, transform 0.2s ease, top 0.1s linear, left 0.1s linear;
-        }
-        
-        .image-toolbar.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
-
-        .loader-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.95); z-index: 9999;
-            display: none; justify-content: center; align-items: center; flex-direction: column;
-        }
-        .spinner { width: 50px; height: 50px; border: 4px solid rgba(99,102,241,0.2); border-top-color: var(--accent-color); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* Auto-save indicator */
-        .autosave-dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background: #10b981;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
-
-    <!-- AUTH SCREEN – PROFESSIONAL UPGRADED LAYOUT -->
-    <div id="auth-screen">
-        <div class="auth-card">
-            <div class="auth-header">
-                <div class="brand"><i class="fa-solid fa-wand-magic-sparkles"></i> ProImage Pro</div>
-                <p style="color: var(--text-muted); margin-top: 8px; font-size: 0.95rem;">Enterprise Composition Studio • v2.3</p>
-            </div>
-
-            <div class="auth-tabs">
-                <div class="auth-tab active" id="tab-login" onclick="Auth.switchTab(0)">Log In</div>
-                <div class="auth-tab" id="tab-register" onclick="Auth.switchTab(1)">Create Account</div>
-            </div>
-
-            <div id="login-form">
-                <div class="form-group">
-                    <label>Username or Email</label>
-                    <input type="text" id="login-identifier" class="form-control" placeholder="Enter username or email">
-                    <i class="fa-solid fa-user input-icon"></i>
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="login-password" class="form-control" placeholder="••••••••">
-                    <i class="fa-solid fa-lock input-icon"></i>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
-                    <input type="checkbox" id="remember-me" checked>
-                    <label for="remember-me" style="font-size: 0.85rem; cursor: pointer;">Keep me signed in</label>
-                </div>
-                <button onclick="Auth.login()" class="btn-auth">Sign In Securely</button>
-                <div id="login-error" class="error-msg"></div>
-            </div>
-
-            <div id="register-form" style="display: none;">
-                <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" id="register-username" class="form-control" placeholder="Choose a username">
-                    <i class="fa-solid fa-user input-icon"></i>
-                </div>
-                <div class="form-group">
-                    <label>Email Address</label>
-                    <input type="email" id="register-email" class="form-control" placeholder="you@email.com">
-                    <i class="fa-solid fa-envelope input-icon"></i>
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="register-password" class="form-control" placeholder="Create strong password">
-                    <i class="fa-solid fa-lock input-icon"></i>
-                </div>
-                <div class="form-group">
-                    <label>Confirm Password</label>
-                    <input type="password" id="register-confirm" class="form-control" placeholder="Confirm password">
-                    <i class="fa-solid fa-lock input-icon"></i>
-                </div>
-                <button onclick="Auth.register()" class="btn-auth">Create Enterprise Account</button>
-                <div id="register-error" class="error-msg"></div>
-            </div>
-
-            <div class="auth-footer">
-                Projects are encrypted and stored per user • Unlimited compositions
-            </div>
-        </div>
-    </div>
-
-    <!-- MAIN APP (exactly as provided – no changes) -->
-    <div id="app-main" style="display: none; height: 100vh; display: flex; flex-direction: column;">
-
-        <header class="topbar">
-            <div class="brand-section">
-                <button class="btn-icon toggle-sidebar-btn" onclick="App.toggleSidebar()" id="sidebar-toggle">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-inner">
+            <div class="header-left">
+                <button type="button" class="menu-btn mobile-only" id="openLeft">
                     <i class="fa-solid fa-bars"></i>
                 </button>
-                <div class="brand"><i class="fa-solid fa-wand-magic-sparkles"></i> ProImage Pro</div>
-                
-                <button onclick="App.switchToDashboard()" class="btn btn-secondary" id="projects-nav-btn">
-                    <i class="fa-solid fa-folder-open"></i> My Projects
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fa-solid fa-cross"></i>
+                        <span id="connectionDot" class="connection-indicator offline" title="Offline"></span>
+                    </div>
+                    <div>
+                        <div class="logo-title">Gospel Prophecy Message</div>
+                        <div class="logo-sub">By Minister Michael</div>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <button type="button" class="menu-btn mobile-only" id="openRight">
+                    <i class="fa-solid fa-book-open"></i>
+                </button>
+                <div id="authButtons">
+                    <button type="button" class="btn btn-ghost" onclick="openModal('login')">Login</button>
+                    <button type="button" class="btn btn-primary" onclick="openModal('register')" id="headerRegBtn">Register</button>
+                </div>
+                <div id="userMenu" class="user-menu hidden">
+                    <div class="avatar" id="userAvatar" onclick="toggleUserDropdown()"></div>
+                    <div class="user-dropdown" id="userDropdown">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="overlay" id="overlay" onclick="closeSidebars()"></div>
+
+    <!-- App Layout -->
+    <div class="app-layout">
+        <!-- Left Sidebar -->
+        <aside class="left-sidebar" id="leftSidebar">
+            <div class="sidebar-mobile-header mobile-only">
+                <div class="logo-title text-primary"><i class="fa-solid fa-cross mr-2"></i> Menu</div>
+                <button type="button" onclick="closeSidebars()" class="text-gray hover:text-dark"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <nav class="nav" id="mainNav">
+                <button type="button" class="nav-btn active" data-page="home" onclick="navigate('home')">
+                    <i class="fa-solid fa-house"></i> Home
+                </button>
+                <button type="button" class="nav-btn" data-page="prophecy" onclick="navigate('prophecy')">
+                    <i class="fa-solid fa-fire-flame-curved"></i> Prophecy
+                </button>
+                <button type="button" class="nav-btn" data-page="about" onclick="navigate('about')">
+                    <i class="fa-solid fa-circle-info"></i> About
+                </button>
+                <button type="button" class="nav-btn" data-page="contact" onclick="navigate('contact')">
+                    <i class="fa-solid fa-headset"></i> Support Chat
+                    <span id="nav-support-badge" class="absolute right-3 w-2 h-2 rounded-full bg-red-500 hidden animate-pulse"></span>
+                </button>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="quote-box">
+                    <div class="quote-text">"Surely the Lord GOD does nothing, unless He reveals His secret to His servants the prophets."</div>
+                    <div class="quote-ref">Amos 3:7</div>
+                </div>
+                <div class="follow-us">
+                    <div class="follow-label">Follow us</div>
+                    <div class="social-icons">
+                        <a href="#" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
+                        <a href="#" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div class="copyright">© 2026 Gospel Prophecy Message. All rights reserved.</div>
+            </div>
+        </aside>
+
+        <!-- Center Content -->
+        <main class="center-content" id="centerContent">
+            <!-- Content injected by JS -->
+        </main>
+
+        <!-- Right Sidebar -->
+        <aside class="right-sidebar" id="rightSidebar">
+            <div class="sidebar-mobile-header mobile-only">
+                <div class="logo-title text-primary"><i class="fa-solid fa-book-bible mr-2"></i> Prophecies</div>
+                <button type="button" onclick="closeSidebars()" class="text-gray hover:text-dark"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="sidebar-header">
+                <h3 class="sidebar-title">
+                    <i class="fa-solid fa-book-bible"></i> Prophecy
+                </h3>
+                <p class="sidebar-subtitle">Outpour of prophetic messages</p>
+            </div>
+            <div class="search-wrap">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search prophecies...">
+            </div>
+            <div class="prophecy-list" id="prophecyList">
+                <!-- Injected by JS -->
+            </div>
+        </aside>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                Gospel Prophecy Message <span>by Minister Michael</span>
+            </div>
+            <div class="footer-social">
+                <a href="#"><i class="fa-brands fa-youtube"></i></a>
+                <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                <a href="#"><i class="fa-brands fa-whatsapp"></i></a>
+                <a href="#"><i class="fa-brands fa-facebook"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <button type="button" class="close-modal" onclick="closeModal('login')"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-header">
+                <div class="modal-title font-display">Welcome Back</div>
+                <div class="modal-subtitle">Sign in to receive prophetic words</div>
+            </div>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="loginEmail" required placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="loginPassword" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 8px;">
+                    Login
+                </button>
+            </form>
+            <div class="modal-footer" id="loginRegFooter"></div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <button type="button" class="close-modal" onclick="closeModal('register')"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-header">
+                <div class="modal-title font-display">Join The Watchmen</div>
+                <div class="modal-subtitle">Create account to interact with prophecies</div>
+            </div>
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-input" id="regName" required placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="regEmail" required placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="regPassword" required placeholder="Minimum 6 characters" minlength="6">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 8px;">
+                    Create Account
+                </button>
+            </form>
+            <div class="modal-footer">
+                Already have an account? <a onclick="switchModal('register', 'login')">Login</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Professional Share Modal -->
+    <div class="modal" id="shareModal">
+        <div class="modal-content share-modal-content">
+            <button type="button" class="close-modal" onclick="closeModal('share')"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-header" style="margin-bottom: 16px;">
+                <div class="modal-title font-display" style="font-size: 22px;">Share Prophecy</div>
+                <div class="modal-subtitle">High-Quality Social Media Image Generated</div>
+            </div>
+            
+            <div class="preview-img-wrapper" id="shareImagePreviewBox">
+                <!-- Image injected here -->
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3" id="shareActionButtons">
+                <button type="button" id="btnDownloadImage" class="btn btn-primary w-full justify-center shadow-md py-3 text-[13px] font-bold">
+                    <i class="fa-solid fa-download"></i> Save HD Image
+                </button>
+                <button type="button" id="btnNativeShare" class="btn btn-primary w-full justify-center shadow-md py-3 text-[13px] font-bold bg-[#25d366] hover:bg-[#1ebc59]">
+                    <i class="fa-solid fa-share-nodes"></i> Share Native
+                </button>
+                <button type="button" id="btnCopyLink" class="btn btn-outline col-span-2 w-full justify-center py-2.5 text-[13px]">
+                    <i class="fa-solid fa-link"></i> Copy Post Link
                 </button>
             </div>
+        </div>
+    </div>
 
-            <div style="display: flex; align-items: center; gap: 16px;">
-                
-                <!-- Editor controls -->
-                <div id="editor-controls-group" style="display: flex; align-items: center; gap: 12px;">
-                    <select id="export-quality" class="form-control" style="width: auto; padding: 8px 12px; height: 38px;">
-                        <option value="1">Standard</option>
-                        <option value="2" selected>Retina HQ</option>
-                        <option value="3">Ultra Print</option>
-                    </select>
-                    
-                    <div class="btn-group" style="display:flex;gap:4px;">
-                        <button class="btn btn-secondary" onclick="App.clearCanvas()"><i class="fa-solid fa-trash-can"></i></button>
-                        <button class="btn btn-primary" onclick="App.exportImage()"><i class="fa-solid fa-cloud-arrow-down"></i> Export</button>
-                    </div>
-
-                    <!-- New Enterprise buttons -->
-                    <button onclick="UI.showTemplatesModal()" class="btn btn-secondary" title="Templates">
-                        <i class="fa-solid fa-layer-group"></i>
-                    </button>
-                    <button onclick="UI.showAIModal()" class="btn btn-secondary" title="AI Assistant">
-                        <i class="fa-solid fa-sparkles"></i>
-                    </button>
-                    <button onclick="UI.showVersionHistory()" class="btn btn-secondary" title="Version History">
-                        <i class="fa-solid fa-clock-rotate-left"></i>
-                    </button>
-                </div>
-
-                <div id="current-project-display" style="display: none; background: #0f172a; border: 1px solid var(--border-color); border-radius: 9999px; padding: 6px 18px; font-size: 0.95rem; align-items: center; gap: 8px; max-width: 260px;">
-                    <i class="fa-solid fa-file-lines"></i>
-                    <span id="project-name-text" ondblclick="Projects.inlineRename()" style="cursor: text; font-weight: 500;"></span>
-                    <span id="autosave-indicator" class="autosave-dot" title="Auto-saving..."></span>
-                </div>
-
-                <!-- User -->
-                <div onclick="UI.showProfileMenu()" style="cursor: pointer; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.08); padding: 4px 14px; border-radius: 9999px;">
-                    <div id="user-avatar" style="width: 34px; height: 34px; background: var(--accent-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem;"></div>
-                    <span id="user-display-name" style="font-weight: 500;"></span>
-                    <i class="fa-solid fa-caret-down"></i>
+    <!-- Hidden Export Generation Canvas Framework -->
+    <div id="exportContainerWrapper" class="export-canvas-wrapper">
+        <div class="export-inner">
+            <div class="export-header">
+                <div class="export-logo-box"><i class="fa-solid fa-cross"></i></div>
+                <div class="export-header-text">
+                    <h2>Gospel Prophecy Message</h2>
+                    <p>By Minister Michael</p>
                 </div>
             </div>
-        </header>
-
-        <div class="main-wrapper">
-            <aside class="sidebar" id="sidebarMenu">
-                <div class="sidebar-content">
-                    <!-- Original controls preserved -->
-                    <div class="control-group">
-                        <h3>Layout & Dimensions</h3>
-                        <div class="setting-row">
-                            <label>Aspect Ratio</label>
-                            <select class="form-control" id="ctrl-ratio" onchange="App.updateLayout()">
-                                <option value="auto">Auto Document</option>
-                                <option value="1/1">1:1 Square</option>
-                                <option value="4/5">4:5 Portrait</option>
-                                <option value="16/9">16:9 Landscape</option>
-                            </select>
-                        </div>
-                        <div class="setting-row">
-                            <label>Width <span><span class="val" id="val-width">800</span>px</span></label>
-                            <input type="range" id="ctrl-width" min="400" max="1200" step="10" value="800" oninput="App.updateLayout()">
-                        </div>
-                        <div class="setting-row">
-                            <label>Outer Padding <span><span class="val" id="val-padding">40</span>px</span></label>
-                            <input type="range" id="ctrl-padding" min="0" max="120" step="5" value="40" oninput="App.updateStyles()">
-                        </div>
-                        <div class="setting-row">
-                            <label>Edge Radius <span><span class="val" id="val-radius">16</span>px</span></label>
-                            <input type="range" id="ctrl-radius" min="0" max="60" step="2" value="16" oninput="App.updateStyles()">
-                        </div>
-                    </div>
-
-                    <div class="control-group">
-                        <h3>Canvas Aesthetics</h3>
-                        <div class="setting-row">
-                            <label>Background Presets</label>
-                            <div class="gradient-presets" id="preset-container"></div>
-                        </div>
-                        <div class="setting-row">
-                            <label>Solid Color</label>
-                            <input type="color" id="ctrl-bg-color" class="form-control" style="padding: 2px; height: 40px;" oninput="App.setCustomBackground()">
-                        </div>
-                        <div class="setting-row">
-                            <label>Shadow Depth <span><span class="val" id="val-shadow">10</span>px</span></label>
-                            <input type="range" id="ctrl-card-shadow" min="0" max="40" step="2" value="10" oninput="App.updateStyles()">
-                        </div>
-                    </div>
-
-                    <div class="control-group">
-                        <h3>Typography & Theme</h3>
-                        <div class="setting-row">
-                            <label>Font Family</label>
-                            <select class="form-control" id="ctrl-font" onchange="App.updateStyles()">
-                                <option value="'Inter', sans-serif">Inter</option>
-                                <option value="'Montserrat', sans-serif">Montserrat</option>
-                                <option value="'Oswald', sans-serif">Oswald</option>
-                                <option value="'Playfair Display', serif">Playfair</option>
-                                <option value="'Merriweather', serif">Merriweather</option>
-                                <option value="'Lora', serif">Lora</option>
-                                <option value="'Space Grotesk', sans-serif">Space Grotesk</option>
-                            </select>
-                        </div>
-                        <div class="setting-row">
-                            <label>Line Spacing <span><span class="val" id="val-line-height">1.8</span></span></label>
-                            <input type="range" id="ctrl-line-height" min="1.1" max="2.5" step="0.1" value="1.8" oninput="App.updateStyles()">
-                        </div>
-                        <div class="setting-row">
-                            <label>Text Color</label>
-                            <input type="color" id="ctrl-text-color" class="form-control" value="#111827" style="padding: 2px; height: 40px;" oninput="App.updateStyles()">
-                        </div>
-                        <div class="setting-row">
-                            <label>Paper Color</label>
-                            <input type="color" id="ctrl-inner-bg" class="form-control" value="#ffffff" style="padding: 2px; height: 40px;" oninput="App.updateStyles()">
-                        </div>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- View Container -->
-            <div id="view-container" style="flex-grow: 1; position: relative; display: flex; flex-direction: column; height: 100%;">
-
-                <!-- DASHBOARD -->
-                <div id="dashboard-view" style="display: none; flex-direction: column; height: 100%;">
-                    <div class="dashboard-header">
-                        <h1>My Projects</h1>
-                        <div class="dashboard-tools">
-                            <input type="text" id="project-search" class="search-input" placeholder="Search compositions..." onkeyup="Projects.filterProjects()">
-                            <select id="project-sort" class="form-control" onchange="Projects.filterProjects()" style="width: 160px;">
-                                <option value="recent">Most Recent</option>
-                                <option value="name">Name A–Z</option>
-                                <option value="oldest">Oldest First</option>
-                            </select>
-                            <button onclick="Projects.createNewProject()" class="btn btn-primary">
-                                <i class="fa-solid fa-plus"></i> New Project
-                            </button>
-                            <button onclick="UI.showTemplatesModal()" class="btn btn-secondary">
-                                <i class="fa-solid fa-layer-group"></i> Templates
-                            </button>
-                        </div>
-                    </div>
-                    <div id="projects-grid" class="projects-grid"></div>
-                </div>
-
-                <!-- EDITOR VIEW -->
-                <div id="editor-view" style="flex: 1; display: flex; flex-direction: column; height: 100%;">
-                    <main class="workspace" id="workspace">
-                        
-                        <!-- Original toolbar preserved -->
-                        <div class="text-toolbar" id="text-toolbar">
-                            <button class="btn btn-icon" onclick="Editor.format('undo')"><i class="fa-solid fa-arrow-rotate-left"></i></button>
-                            <button class="btn btn-icon" onclick="Editor.format('redo')"><i class="fa-solid fa-arrow-rotate-right"></i></button>
-                            <div class="toolbar-divider"></div>
-                            <button class="btn btn-icon" onclick="Editor.format('formatBlock', 'H1')"><b style="font-size:1.1rem;">H1</b></button>
-                            <button class="btn btn-icon" onclick="Editor.format('formatBlock', 'H2')"><b>H2</b></button>
-                            <button class="btn btn-icon" onclick="Editor.format('formatBlock', 'P')"><i class="fa-solid fa-paragraph"></i></button>
-                            <div class="toolbar-divider"></div>
-                            <button class="btn btn-icon" onclick="Editor.format('bold')"><i class="fa-solid fa-bold"></i></button>
-                            <button class="btn btn-icon" onclick="Editor.format('italic')"><i class="fa-solid fa-italic"></i></button>
-                            <button class="btn btn-icon" onclick="Editor.format('underline')"><i class="fa-solid fa-underline"></i></button>
-                            <button class="btn btn-icon" onclick="Editor.format('hiliteColor', '#fef08a')"><i class="fa-solid fa-highlighter"></i></button>
-                            <div class="toolbar-divider"></div>
-                            <button class="btn btn-icon" onclick="Editor.format('justifyLeft')"><i class="fa-solid fa-align-left"></i></button>
-                            <button class="btn btn-icon" onclick="Editor.format('justifyCenter')"><i class="fa-solid fa-align-center"></i></button>
-                            <button class="btn btn-icon" onclick="Editor.format('justifyRight')"><i class="fa-solid fa-align-right"></i></button>
-                            <div class="toolbar-divider"></div>
-                            <button class="btn btn-icon" onclick="Editor.triggerImageUpload()" style="color:var(--accent-color)"><i class="fa-solid fa-image"></i> Image</button>
-                        </div>
-
-                        <!-- Image toolbar preserved -->
-                        <div class="image-toolbar" id="image-toolbar">
-                            <span class="controls-label"><i class="fa-solid fa-expand"></i> Resize</span>
-                            <div class="slider-wrapper">
-                                <input type="range" id="img-size-slider" min="10" max="100" step="1" value="100">
-                                <span id="img-size-val">100%</span>
-                            </div>
-                            <div class="toolbar-divider"></div>
-                            <button class="btn btn-icon" onclick="ImageEditor.align('left')"><i class="fa-solid fa-align-left"></i></button>
-                            <button class="btn btn-icon" onclick="ImageEditor.align('center')"><i class="fa-solid fa-align-center"></i></button>
-                            <button class="btn btn-icon" onclick="ImageEditor.align('right')"><i class="fa-solid fa-align-right"></i></button>
-                            <div class="toolbar-divider"></div>
-                            <button class="btn btn-icon" style="color:#ef4444" onclick="ImageEditor.remove()"><i class="fa-solid fa-trash-can"></i></button>
-                        </div>
-
-                        <!-- Canvas preserved 100% -->
-                        <div id="export-wrapper" style="width: 800px; aspect-ratio: auto;">
-                            <div id="export-canvas">
-                                <div id="editor" class="rich-editor" contenteditable="true" spellcheck="false" oninput="App.handleInput()"></div>
-                                <div class="watermark-footer">
-                                    <span class="dev-info">Enterprise by <strong>Ogunleye Michael</strong></span>
-                                    <span class="time-info" id="watermark-time"></span>
-                                    <span id="stats-info" style="font-size:0.7rem;opacity:0.6"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </main>
-                </div>
+            
+            <img id="exportImg" class="export-featured-img hidden" crossOrigin="anonymous" alt="Prophecy Visual">
+            
+            <div class="export-content">
+                <div class="export-date" id="exportDate"></div>
+                <div class="export-title" id="exportTitle"></div>
+                <div class="export-body" id="exportBody"></div>
+            </div>
+            
+            <div class="export-footer">
+                <div class="export-footer-text">Read the full prophecy at <span id="exportDomainName">gospelprophecy.com</span></div>
             </div>
         </div>
     </div>
 
-    <!-- Hidden file input -->
-    <input type="file" id="imageUploadInput" accept="image/*" style="display:none">
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Loader -->
-    <div class="loader-overlay" id="loader">
-        <div class="spinner"></div>
-        <h2 style="color:white;font-family:'Space Grotesk',sans-serif">Rendering Enterprise Asset...</h2>
-    </div>
+    <!-- FIREBASE & ARCHITECTURE LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, get, set, push, onValue, runTransaction, update, onChildAdded, onChildChanged, onChildRemoved } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    <!-- Toast -->
-    <div id="toast" class="toast">
-        <i id="toast-icon" class="fa-solid fa-check-circle"></i>
-        <span id="toast-text"></span>
-    </div>
-
-    <!-- MODALS -->
-    <div id="modal" class="modal" onclick="if(event.target.id==='modal')UI.hideModal()">
-        <div class="modal-content" onclick="event.stopImmediatePropagation()">
-            <div id="modal-inner"></div>
-        </div>
-    </div>
-
-    <script>
-        /**
-         * PROIMAGE PRO — ENTERPRISE EDITION v2.3
-         * All previous features preserved + major professional upgrades:
-         * • Project search & sorting
-         * • Inline project rename
-         * • Version history with restore
-         * • Template gallery
-         * • AI Content Assistant
-         * • Export menu (PNG + Copy + Print)
-         * • Auto-save indicator + live stats
-         * • Profile settings modal
-         * • Smooth transitions & enterprise polish
-         * 
-         * AUTH SCREEN ONLY: Professional advanced styling & layout upgraded
-         */
-
-        const USERS_KEY = 'proimage_users_v3';
-        const SESSION_KEY = 'proimage_session_v3';
-
-        let currentUser = null;
-        let currentProjectId = null;
-        let currentView = 'dashboard';
-
-        const gradients = [
-            'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
-            'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)',
-            'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
-            'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
-            'linear-gradient(135deg, #fccb90 0%, #d57eeb 100%)',
-            'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)',
-            'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-            '#1e293b'
-        ];
-
-        const App = {
-            isSidebarOpen: true,
-            lastSaveTime: Date.now(),
-
-            init() {
-                const sessionId = localStorage.getItem(SESSION_KEY);
-                if (sessionId) {
-                    const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-                    const user = users.find(u => u.id === parseInt(sessionId));
-                    if (user) {
-                        this.loginSuccess(user);
-                        return;
-                    }
-                }
-                document.getElementById('auth-screen').style.display = 'flex';
-            },
-
-            loginSuccess(user) {
-                currentUser = user;
-                document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('app-main').style.display = 'flex';
-                
-                document.getElementById('user-display-name').textContent = user.username;
-                document.getElementById('user-avatar').innerHTML = user.username[0].toUpperCase();
-                
-                this.renderPresets();
-                Projects.renderDashboard();
-                App.switchToDashboard();
-                
-                ImageEditor.init();
-                setTimeout(() => this.autoFitContent(), 100);
-                
-                // Live auto-save heartbeat
-                setInterval(() => {
-                    if (currentView === 'editor' && currentProjectId) {
-                        this.saveCurrentProject();
-                    }
-                }, 4000);
-            },
-
-            logout() {
-                localStorage.removeItem(SESSION_KEY);
-                location.reload();
-            },
-
-            renderPresets() {
-                const container = document.getElementById('preset-container');
-                if (container.children.length) return;
-                gradients.forEach(bg => {
-                    const btn = document.createElement('div');
-                    btn.className = 'grad-btn';
-                    btn.style.background = bg;
-                    btn.onclick = () => {
-                        document.documentElement.style.setProperty('--cvs-bg', bg);
-                        this.saveCurrentProject();
-                    };
-                    container.appendChild(btn);
-                });
-            },
-
-            toggleSidebar() {
-                if (currentView !== 'editor') return;
-                const sidebar = document.getElementById('sidebarMenu');
-                const btn = document.getElementById('sidebar-toggle').querySelector('i');
-                this.isSidebarOpen = !this.isSidebarOpen;
-                sidebar.classList.toggle('collapsed', !this.isSidebarOpen);
-                btn.classList.toggle('fa-bars', this.isSidebarOpen);
-                btn.classList.toggle('fa-chevron-right', !this.isSidebarOpen);
-                setTimeout(() => this.autoFitContent(), 320);
-            },
-
-            switchToDashboard() {
-                currentView = 'dashboard';
-                currentProjectId = null;
-                document.getElementById('editor-view').style.display = 'none';
-                document.getElementById('dashboard-view').style.display = 'flex';
-                document.getElementById('sidebarMenu').style.display = 'none';
-                document.getElementById('editor-controls-group').style.display = 'none';
-                document.getElementById('current-project-display').style.display = 'none';
-                Projects.renderDashboard();
-            },
-
-            switchToEditor(projectId) {
-                currentView = 'editor';
-                document.getElementById('dashboard-view').style.display = 'none';
-                document.getElementById('editor-view').style.display = 'flex';
-                document.getElementById('sidebarMenu').style.display = 'flex';
-                document.getElementById('editor-controls-group').style.display = 'flex';
-                document.getElementById('current-project-display').style.display = 'flex';
-                if (projectId) {
-                    Projects.openProject(projectId);
-                }
-                setTimeout(() => this.autoFitContent(), 80);
-            },
-
-            autoFitContent() {
-                const ratio = document.getElementById('ctrl-ratio').value;
-                const editor = document.getElementById('editor');
-                const root = document.documentElement;
-                root.style.setProperty('--content-scale', '1');
-                if (ratio === 'auto') {
-                    editor.style.overflowY = 'visible';
-                    return;
-                }
-                editor.style.overflowY = 'hidden';
-                const padding = 80;
-                const available = editor.clientHeight - padding;
-                const needed = editor.scrollHeight - padding;
-                if (needed > available && available > 0) {
-                    let scale = Math.max(0.1, (available / needed) * 0.98);
-                    root.style.setProperty('--content-scale', scale);
-                    let i = 0;
-                    while (editor.scrollHeight > editor.clientHeight && scale > 0.1 && i < 12) {
-                        scale -= 0.01;
-                        root.style.setProperty('--content-scale', scale);
-                        i++;
-                    }
-                }
-                if (ImageEditor.activeImg) ImageEditor.repositionToolbar();
-                this.updateStats();
-            },
-
-            updateTimestamp() {
-                const d = new Date();
-                const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-                document.getElementById('watermark-time').innerHTML = `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
-            },
-
-            updateLayout() {
-                if (currentView !== 'editor') return;
-                const w = document.getElementById('ctrl-width').value;
-                document.getElementById('val-width').innerText = w;
-                const wrapper = document.getElementById('export-wrapper');
-                wrapper.style.width = w + 'px';
-                wrapper.style.aspectRatio = document.getElementById('ctrl-ratio').value === 'auto' ? 'unset' : document.getElementById('ctrl-ratio').value;
-                this.autoFitContent();
-                this.saveCurrentProject();
-            },
-
-            updateStyles() {
-                if (currentView !== 'editor') return;
-                const padding = document.getElementById('ctrl-padding').value;
-                const radius = document.getElementById('ctrl-radius').value;
-                const shadow = document.getElementById('ctrl-card-shadow').value;
-                const font = document.getElementById('ctrl-font').value;
-                const lh = document.getElementById('ctrl-line-height').value;
-                const textC = document.getElementById('ctrl-text-color').value;
-                const inner = document.getElementById('ctrl-inner-bg').value;
-
-                document.getElementById('val-padding').innerText = padding;
-                document.getElementById('val-radius').innerText = radius;
-                document.getElementById('val-shadow').innerText = shadow;
-                document.getElementById('val-line-height').innerText = lh;
-
-                const root = document.documentElement;
-                root.style.setProperty('--cvs-padding', padding + 'px');
-                root.style.setProperty('--cvs-radius', radius + 'px');
-                root.style.setProperty('--cvs-font', font);
-                root.style.setProperty('--cvs-line-height', lh);
-                root.style.setProperty('--cvs-color', textC);
-                root.style.setProperty('--cvs-card-shadow', shadow > 0 ? `0 ${shadow}px ${shadow*2}px rgba(0,0,0,0.12)` : 'none');
-                document.getElementById('editor').style.background = inner;
-                this.autoFitContent();
-                this.saveCurrentProject();
-            },
-
-            setCustomBackground() {
-                if (currentView !== 'editor') return;
-                document.documentElement.style.setProperty('--cvs-bg', document.getElementById('ctrl-bg-color').value);
-                this.saveCurrentProject();
-            },
-
-            handleInput() {
-                if (currentView !== 'editor') return;
-                this.autoFitContent();
-                this.saveCurrentProject();
-            },
-
-            clearCanvas() {
-                if (confirm('Clear entire composition?')) {
-                    document.getElementById('editor').innerHTML = `<h1>New Composition</h1><p>Start typing...</p>`;
-                    ImageEditor.hideToolbar();
-                    this.autoFitContent();
-                    this.saveCurrentProject();
-                    this.showToast('Canvas cleared', 'success');
-                }
-            },
-
-            exportImage() {
-                if (currentView !== 'editor') return;
-                this.updateTimestamp();
-                const target = document.getElementById('export-wrapper');
-                const loader = document.getElementById('loader');
-                const scale = parseInt(document.getElementById('export-quality').value) || 2;
-                loader.style.display = 'flex';
-                ImageEditor.hideToolbar();
-                setTimeout(() => {
-                    html2canvas(target, {scale, useCORS: true, backgroundColor: null}).then(canvas => {
-                        const link = document.createElement('a');
-                        link.download = `ProImage_${currentProjectId || 'export'}_${Date.now()}.png`;
-                        link.href = canvas.toDataURL('image/png');
-                        link.click();
-                        loader.style.display = 'none';
-                        this.showToast('✅ Exported successfully', 'success');
-                    }).catch(() => {
-                        loader.style.display = 'none';
-                    });
-                }, 180);
-            },
-
-            saveCurrentProject() {
-                if (!currentUser || !currentProjectId || currentView !== 'editor') return;
-                const state = {
-                    html: document.getElementById('editor').innerHTML,
-                    ratio: document.getElementById('ctrl-ratio').value,
-                    width: document.getElementById('ctrl-width').value,
-                    padding: document.getElementById('ctrl-padding').value,
-                    radius: document.getElementById('ctrl-radius').value,
-                    shadow: document.getElementById('ctrl-card-shadow').value,
-                    font: document.getElementById('ctrl-font').value,
-                    lineHeight: document.getElementById('ctrl-line-height').value,
-                    textColor: document.getElementById('ctrl-text-color').value,
-                    innerBg: document.getElementById('ctrl-inner-bg').value,
-                    bgStyle: getComputedStyle(document.documentElement).getPropertyValue('--cvs-bg').trim()
-                };
-
-                const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-                const uIdx = users.findIndex(u => u.id === currentUser.id);
-                if (uIdx < 0) return;
-                const pIdx = users[uIdx].projects.findIndex(p => p.id === currentProjectId);
-                if (pIdx < 0) return;
-
-                users[uIdx].projects[pIdx].state = state;
-                users[uIdx].projects[pIdx].lastEdited = new Date().toISOString();
-                localStorage.setItem(USERS_KEY, JSON.stringify(users));
-                document.getElementById('autosave-indicator').style.opacity = 1;
-                setTimeout(() => document.getElementById('autosave-indicator').style.opacity = 0.3, 1200);
-                this.updateStats();
-            },
-
-            loadProjectState(project) {
-                const state = project.state || {};
-                if (state.html) document.getElementById('editor').innerHTML = state.html;
-                if (state.ratio) document.getElementById('ctrl-ratio').value = state.ratio;
-                if (state.width) document.getElementById('ctrl-width').value = state.width;
-                if (state.padding) document.getElementById('ctrl-padding').value = state.padding;
-                if (state.radius) document.getElementById('ctrl-radius').value = state.radius;
-                if (state.shadow) document.getElementById('ctrl-card-shadow').value = state.shadow;
-                if (state.font) document.getElementById('ctrl-font').value = state.font;
-                if (state.lineHeight) document.getElementById('ctrl-line-height').value = state.lineHeight;
-                if (state.textColor) document.getElementById('ctrl-text-color').value = state.textColor;
-                if (state.innerBg) document.getElementById('ctrl-inner-bg').value = state.innerBg;
-                if (state.bgStyle) document.documentElement.style.setProperty('--cvs-bg', state.bgStyle);
-
-                document.getElementById('project-name-text').innerHTML = project.name + ` <span style="font-size:0.75rem;color:#64748b">v${project.versions ? project.versions.length : 1}</span>`;
-                this.updateLayout();
-                this.updateStyles();
-                this.autoFitContent();
-                this.updateTimestamp();
-            },
-
-            updateStats() {
-                const editor = document.getElementById('editor');
-                const text = editor.innerText || '';
-                const words = text.trim().split(/\s+/).filter(Boolean).length;
-                const images = editor.querySelectorAll('img').length;
-                document.getElementById('stats-info').innerHTML = `${words} words • ${images} images`;
-            },
-
-            showToast(text, type = 'success') {
-                const toast = document.getElementById('toast');
-                const icon = document.getElementById('toast-icon');
-                document.getElementById('toast-text').innerHTML = text;
-                icon.className = type === 'success' ? 'fa-solid fa-check-circle' : 'fa-solid fa-info-circle';
-                toast.style.display = 'flex';
-                setTimeout(() => { toast.style.display = 'none'; }, 2600);
-            }
+        const firebaseConfig = {
+            apiKey: "AIzaSyC62LYyePrJv28CsNstvo5r-jssqT0HSZM",
+            authDomain: "gospelprophecy-15f18.firebaseapp.com",
+            projectId: "gospelprophecy-15f18",
+            storageBucket: "gospelprophecy-15f18.firebasestorage.app",
+            messagingSenderId: "116748115311",
+            appId: "1:116748115311:web:376f8530f95b1955301c9a",
+            measurementId: "G-D4RYBRWGHF"
         };
 
-        /* AUTH */
-        const Auth = {
-            switchTab(n) {
-                const tabs = document.querySelectorAll('.auth-tab');
-                tabs.forEach((t,i) => i===n ? t.classList.add('active') : t.classList.remove('active'));
-                document.getElementById('login-form').style.display = n===0 ? 'block' : 'none';
-                document.getElementById('register-form').style.display = n===1 ? 'block' : 'none';
-            },
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-            login() {
-                const id = document.getElementById('login-identifier').value.trim();
-                const pw = document.getElementById('login-password').value;
-                const err = document.getElementById('login-error');
-                const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-                const user = users.find(u => (u.username.toLowerCase() === id.toLowerCase() || u.email.toLowerCase() === id.toLowerCase()) && u.password === pw);
-                if (!user) {
-                    err.textContent = 'Invalid login';
-                    err.style.display = 'block';
-                    return;
-                }
-                if (document.getElementById('remember-me').checked) localStorage.setItem(SESSION_KEY, user.id);
-                err.style.display = 'none';
-                App.loginSuccess(user);
-            },
-
-            register() {
-                const username = document.getElementById('register-username').value.trim();
-                const email = document.getElementById('register-email').value.trim();
-                const pw = document.getElementById('register-password').value;
-                const confirm = document.getElementById('register-confirm').value;
-                const err = document.getElementById('register-error');
-                if (!username || !email || !pw || pw !== confirm) {
-                    err.textContent = pw !== confirm ? 'Passwords do not match' : 'All fields required';
-                    err.style.display = 'block';
-                    return;
-                }
-                let users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-                if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-                    err.textContent = 'Username taken';
-                    err.style.display = 'block';
-                    return;
-                }
-                const newUser = {
-                    id: Date.now(),
-                    username,
-                    email,
-                    password: pw,
-                    projects: []
-                };
-                users.push(newUser);
-                localStorage.setItem(USERS_KEY, JSON.stringify(users));
-                localStorage.setItem(SESSION_KEY, newUser.id);
-                App.loginSuccess(newUser);
-            }
-        };
-
-        /* PROJECTS */
-        const Projects = {
-            renderDashboard(filteredProjects = null) {
-                const grid = document.getElementById('projects-grid');
-                grid.innerHTML = '';
-                const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-                const user = users.find(u => u.id === currentUser.id);
-                if (!user) return;
-                const projects = filteredProjects || user.projects;
-
-                if (projects.length === 0) {
-                    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:80px 20px;color:#64748b"><i class="fa-solid fa-folder-open" style="font-size:4rem;opacity:0.3"></i><h3>No projects yet</h3><p>Start your first enterprise composition</p></div>`;
-                    return;
-                }
-
-                projects.forEach(p => {
-                    const date = new Date(p.lastEdited || p.createdAt);
-                    const card = document.createElement('div');
-                    card.className = 'project-card';
-                    card.innerHTML = `
-                    <div class="preview"><i class="fa-solid fa-file-image"></i></div>
-                    <div class="card-header">
-                        <div>
-                            <div class="project-name">${p.name}</div>
-                            <div class="project-date">${date.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
-                        </div>
-                        <div onclick="event.stopImmediatePropagation();Projects.deleteProject(${p.id});" style="color:#ef4444;cursor:pointer"><i class="fa-solid fa-trash-can"></i></div>
-                    </div>`;
-                    card.onclick = () => Projects.openProject(p.id);
-                    grid.appendChild(card);
-                });
-            },
-
-            filterProjects() {
-                const query = document.getElementById('project-search').value.toLowerCase().trim();
-                const sortMode = document.getElementById('project-sort').value;
-                const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-                let projects = users.find(u => u.id === currentUser.id).projects || [];
-
-                if (query) {
-                    projects = projects.filter(p => p.name.toLowerCase().includes(query));
-                }
-
-                if (sortMode === 'name') {
-                    projects.sort((a,b) => a.name.localeCompare(b.name));
-                } else if (sortMode === 'oldest') {
-                    projects.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
-                } else {
-                    projects.sort((a,b) => new Date(b.lastEdited) - new Date(a.lastEdited));
-                }
-
-                this.renderDashboard(projects);
-            },
-
-            createNewProject() {
-                const name = prompt('Project name:', `Enterprise Composition ${new Date().toLocaleDateString()}`);
-                if (!name) return;
-                const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-                const uIdx = users.findIndex(u => u.id === currentUser.id);
-                const newProject = {
-                    id: Date.now(),
-                    name: name,
-                    createdAt: new Date().toISOString(),
-                    lastEdited: new Date().toISOString(),
-                    versions: [],
-                    state: {
-                        html: `<h1>${name}</h1><p>Enterprise ready. Start building your masterpiece.</p>`,
-                        ratio: "auto", width: "800", padding: "40", radius: "16", shadow: "10",
-                        font: "'Inter', sans-serif", lineHeight: "1.8", textColor: "#111827",
-                        innerBg: "#ffffff", bgStyle: gradients[0]
-                    }
-                };
-                users[uIdx].projects.unshift(newProject);
-                localStorage.setItem(USERS_KEY, JSON.stringify(users));
-                currentProjectId = newProject.id;
-                App.loadProjectState(newProject);
-                App.switchToEditor();
-                App.showToast(`Project <strong>${name}</strong> created`, 'success');
-            },
-
-            openProject(id) {
-                const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-                const user = users.find(u => u.id === currentUser.id);
-                const project = user.projects.find(p => p.id === id);
-                if (!project) return;
-                currentProjectId = id;
-                App.loadProjectState(project);
-                App.switchToEditor();
-            },
-
-            deleteProject(id) {
-                if (!confirm('Permanently delete this project?')) return;
-                let users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-                const uIdx = users.findIndex(u => u.id === currentUser.id);
-                users[uIdx].projects = users[uIdx].projects.filter(p => p.id !== id);
-                localStorage.setItem(USERS_KEY, JSON.stringify(users));
-                if (currentProjectId === id) currentProjectId = null;
-                this.renderDashboard();
-                App.showToast('Project deleted', 'success');
-            },
-
-            inlineRename() {
-                if (currentView !== 'editor' || !currentProjectId) return;
-                const nameEl = document.getElementById('project-name-text');
-                const currentName = nameEl.textContent.split(' v')[0];
-                const newName = prompt('Rename project:', currentName);
-                if (!newName || newName === currentName) return;
-                const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-                const uIdx = users.findIndex(u => u.id === currentUser.id);
-                const pIdx = users[uIdx].projects.findIndex(p => p.id === currentProjectId);
-                if (pIdx > -1) {
-                    users[uIdx].projects[pIdx].name = newName;
-                    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-                    nameEl.innerHTML = newName + ` <span style="font-size:0.75rem;color:#64748b">v${users[uIdx].projects[pIdx].versions ? users[uIdx].projects[pIdx].versions.length : 1}</span>`;
-                }
-            }
-        };
-
-        /* UI MODALS & ENTERPRISE TOOLS */
-        const UI = {
-            showModal(html) {
-                const modal = document.getElementById('modal');
-                document.getElementById('modal-inner').innerHTML = html;
-                modal.style.display = 'flex';
-            },
-
-            hideModal() {
-                document.getElementById('modal').style.display = 'none';
-            },
-
-            showTemplatesModal() {
-                let html = `<div class="modal-header"><h3 style="font-weight:600">Professional Templates</h3><i onclick="UI.hideModal()" class="fa-solid fa-xmark" style="font-size:1.4rem;cursor:pointer"></i></div>
-                <div class="modal-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">`;
-                
-                const templates = [
-                    {name:"Blog Hero", icon:"fa-newspaper", desc:"Modern long-form article"},
-                    {name:"Product Launch", icon:"fa-rocket", desc:"Marketing visual"},
-                    {name:"LinkedIn Post", icon:"fa-linkedin", desc:"Professional update"},
-                    {name:"Instagram Story", icon:"fa-instagram", desc:"Vertical visual"},
-                    {name:"Report Cover", icon:"fa-chart-bar", desc:"Corporate summary"}
-                ];
-                
-                templates.forEach(t => {
-                    html += `<div onclick="Projects.createFromTemplate('${t.name}');UI.hideModal()" style="background:#0f172a;border-radius:12px;padding:16px;cursor:pointer;text-align:center">
-                        <i class="fa-solid ${t.icon}" style="font-size:2.8rem;margin-bottom:12px;color:var(--accent-color)"></i>
-                        <h4>${t.name}</h4>
-                        <p style="font-size:0.85rem;color:#64748b">${t.desc}</p>
-                    </div>`;
-                });
-                html += `</div>`;
-                this.showModal(html);
-            },
-
-            showAIModal() {
-                const html = `
-                <div class="modal-header"><h3>AI Content Assistant</h3><i onclick="UI.hideModal()" class="fa-solid fa-xmark" style="cursor:pointer"></i></div>
-                <div class="modal-body">
-                    <p style="margin-bottom:12px">Describe the content you need:</p>
-                    <input id="ai-prompt" type="text" class="form-control" placeholder="e.g. Write a compelling product description for a new AI tool" style="margin-bottom:16px">
-                    <button onclick="UI.generateAIContent()" class="btn btn-primary" style="width:100%">Generate with AI</button>
-                    <div id="ai-result" style="margin-top:20px;display:none"></div>
-                </div>`;
-                this.showModal(html);
-            },
-
-            generateAIContent() {
-                const prompt = document.getElementById('ai-prompt').value.trim();
-                if (!prompt) return;
-                const resultDiv = document.getElementById('ai-result');
-                resultDiv.style.display = 'block';
-                resultDiv.innerHTML = `<div style="padding:16px;background:#0f172a;border-radius:12px">Generating<span class="spinner" style="width:18px;height:18px;border-width:2px;margin-left:8px"></span></div>`;
-                
-                // Simulate AI
-                setTimeout(() => {
-                    const sample = `<h2>${prompt}</h2><p>AI-generated professional paragraph based on your request. Perfectly formatted for your composition.</p><p>Ready to edit and scale automatically.</p>`;
-                    resultDiv.innerHTML = `<p style="color:#10b981;margin-bottom:12px">✅ Content generated</p><div style="background:#0f172a;padding:16px;border-radius:12px">${sample}</div><button onclick="UI.insertAI('${sample.replace(/'/g,"\\'")}');UI.hideModal()" class="btn btn-primary" style="margin-top:16px;width:100%">Insert into Editor</button>`;
-                }, 1100);
-            },
-
-            insertAI(html) {
-                if (currentView !== 'editor') return;
-                const editor = document.getElementById('editor');
-                editor.focus();
-                document.execCommand('insertHTML', false, html);
-                App.handleInput();
-            },
-
-            showVersionHistory() {
-                if (!currentProjectId) return;
-                const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-                const user = users.find(u => u.id === currentUser.id);
-                const project = user.projects.find(p => p.id === currentProjectId);
-                if (!project || !project.versions || project.versions.length === 0) {
-                    App.showToast('No previous versions yet. Auto-save creates snapshots.', 'info');
-                    return;
-                }
-                let html = `<div class="modal-header"><h3>Version History</h3><i onclick="UI.hideModal()" class="fa-solid fa-xmark"></i></div><div class="modal-body">`;
-                project.versions.forEach((v, i) => {
-                    const d = new Date(v.timestamp);
-                    html += `<div onclick="Projects.restoreVersion(${i});UI.hideModal()" style="padding:14px;border:1px solid var(--border-color);border-radius:12px;margin-bottom:12px;cursor:pointer">
-                        <strong>Version ${project.versions.length - i}</strong> — ${d.toLocaleString()}
-                    </div>`;
-                });
-                html += `</div>`;
-                this.showModal(html);
-            },
-
-            showProfileMenu() {
-                const html = `
-                <div class="modal-header"><h3>Account Settings</h3><i onclick="UI.hideModal()" class="fa-solid fa-xmark"></i></div>
-                <div class="modal-body">
-                    <p><strong>Logged in as:</strong> ${currentUser.username}</p>
-                    <p style="margin:12px 0"><strong>Email:</strong> ${currentUser.email}</p>
-                    <hr style="margin:20px 0;border-color:var(--border-color)">
-                    <button onclick="App.logout()" class="btn btn-secondary" style="width:100%;margin-bottom:12px">Sign Out</button>
-                    <button onclick="UI.hideModal()" class="btn btn-primary" style="width:100%">Close</button>
-                </div>`;
-                this.showModal(html);
-            }
-        };
-
-        /* Extend Projects with templates & versions */
-        Projects.createFromTemplate = function(templateName) {
-            const name = `${templateName} – ${new Date().toLocaleDateString()}`;
-            const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-            const uIdx = users.findIndex(u => u.id === currentUser.id);
-            const newProject = {
-                id: Date.now(),
-                name,
-                createdAt: new Date().toISOString(),
-                lastEdited: new Date().toISOString(),
-                versions: [],
-                state: {
-                    html: `<h1>${templateName}</h1><p>Professional template loaded. Customize freely.</p>`,
-                    ratio: "auto", width: "800", padding: "40", radius: "16", shadow: "10",
-                    font: "'Inter', sans-serif", lineHeight: "1.8", textColor: "#111827",
-                    innerBg: "#ffffff", bgStyle: gradients[Math.floor(Math.random()*gradients.length)]
-                }
+        /* ====================================================================
+           0. UTILITIES (DEBOUNCE ENGINE)
+        ==================================================================== */
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => { clearTimeout(timeout); func(...args); };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
             };
-            users[uIdx].projects.unshift(newProject);
-            localStorage.setItem(USERS_KEY, JSON.stringify(users));
-            currentProjectId = newProject.id;
-            App.loadProjectState(newProject);
-            App.switchToEditor();
-        };
+        }
 
-        Projects.restoreVersion = function(index) {
-            const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-            const uIdx = users.findIndex(u => u.id === currentUser.id);
-            const pIdx = users[uIdx].projects.findIndex(p => p.id === currentProjectId);
-            if (pIdx < 0) return;
-            const version = users[uIdx].projects[pIdx].versions[index];
-            if (version) {
-                users[uIdx].projects[pIdx].state = version.state;
-                localStorage.setItem(USERS_KEY, JSON.stringify(users));
-                App.loadProjectState(users[uIdx].projects[pIdx]);
-                App.showToast('Version restored', 'success');
-            }
-        };
-
-        /* IMAGE EDITOR (preserved) */
-        const Editor = {
-            savedRange: null,
-            format(cmd, val=null) {
-                if (currentView !== 'editor') return;
-                document.getElementById('editor').focus();
-                if (cmd === 'hiliteColor' && !document.queryCommandSupported('hiliteColor')) cmd = 'backColor';
-                document.execCommand(cmd, false, val);
-                App.handleInput();
-            },
-            triggerImageUpload() {
-                if (currentView !== 'editor') return;
-                Editor.saveSelection();
-                document.getElementById('imageUploadInput').click();
-            },
-            saveSelection() {
-                const sel = window.getSelection();
-                if (sel.rangeCount) this.savedRange = sel.getRangeAt(0);
-            },
-            restoreSelection() {
-                if (this.savedRange) {
-                    const sel = window.getSelection();
-                    sel.removeAllRanges();
-                    sel.addRange(this.savedRange);
-                }
-            },
-            handleImageSelect(e) {
-                if (currentView !== 'editor') return;
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = ev => {
-                    Editor.restoreSelection();
-                    const html = `<img src="${ev.target.result}" data-width="100" style="width:calc(100% * var(--content-scale,1));height:auto;display:block;margin:calc(20px * var(--content-scale,1)) auto">`;
-                    document.execCommand('insertHTML', false, html);
-                    App.handleInput();
-                    e.target.value = '';
-                };
-                reader.readAsDataURL(file);
-            }
-        };
-
-        const ImageEditor = {
-            activeImg: null,
+        /* ====================================================================
+           1. HIGH-PERFORMANCE CACHING LAYER (IndexedDB Wrapper)
+        ==================================================================== */
+        const CacheDB = {
+            db: null,
             init() {
-                const editor = document.getElementById('editor');
-                editor.addEventListener('click', e => {
-                    if (e.target.tagName === 'IMG' && currentView === 'editor') this.showToolbar(e.target);
-                    else this.hideToolbar();
-                });
-                const slider = document.getElementById('img-size-slider');
-                slider.addEventListener('input', e => {
-                    if (!this.activeImg) return;
-                    const val = e.target.value;
-                    document.getElementById('img-size-val').textContent = val + '%';
-                    this.activeImg.dataset.width = val;
-                    this.activeImg.style.width = `calc(${val}% * var(--content-scale, 1))`;
-                    App.handleInput();
-                    this.repositionToolbar();
+                return new Promise((resolve) => {
+                    if (!window.indexedDB) return resolve(); // Silent failover for strict environments
+                    const req = indexedDB.open('GPM_Data_Cache', 1);
+                    req.onupgradeneeded = e => { e.target.result.createObjectStore('prophecies', { keyPath: 'id' }); };
+                    req.onsuccess = e => { this.db = e.target.result; resolve(); };
+                    req.onerror = () => { console.warn('IDB init failed, falling back to memory'); resolve(); };
                 });
             },
-            showToolbar(img) {
-                if (this.activeImg) this.activeImg.classList.remove('active-image');
-                this.activeImg = img;
-                this.activeImg.classList.add('active-image');
-                const tb = document.getElementById('image-toolbar');
-                const slider = document.getElementById('img-size-slider');
-                let w = img.dataset.width ? parseInt(img.dataset.width) : 100;
-                slider.value = Math.max(10, Math.min(100, w));
-                document.getElementById('img-size-val').textContent = slider.value + '%';
-                tb.classList.add('visible');
-                requestAnimationFrame(() => this.repositionToolbar());
+            getAll() {
+                return new Promise((resolve) => {
+                    if (!this.db) return resolve([]);
+                    try {
+                        const tx = this.db.transaction('prophecies', 'readonly');
+                        const req = tx.objectStore('prophecies').getAll();
+                        req.onsuccess = () => resolve(req.result);
+                        req.onerror = () => resolve([]);
+                    } catch(e) { resolve([]); }
+                });
             },
-            repositionToolbar() {
-                if (!this.activeImg) return;
-                const tb = document.getElementById('image-toolbar');
-                const r = this.activeImg.getBoundingClientRect();
-                let top = r.bottom + 15;
-                let left = r.left + r.width/2 - tb.offsetWidth/2;
-                if (top + tb.offsetHeight > window.innerHeight - 40) top = r.top - tb.offsetHeight - 15;
-                tb.style.top = top + 'px';
-                tb.style.left = Math.max(20, Math.min(window.innerWidth - tb.offsetWidth - 20, left)) + 'px';
+            putBatch(items) {
+                if (!this.db || items.length === 0) return;
+                try {
+                    const tx = this.db.transaction('prophecies', 'readwrite');
+                    items.forEach(item => tx.objectStore('prophecies').put(item));
+                } catch(e) {}
             },
-            hideToolbar() {
-                if (this.activeImg) this.activeImg.classList.remove('active-image');
-                this.activeImg = null;
-                document.getElementById('image-toolbar').classList.remove('visible');
-            },
-            align(dir) {
-                if (!this.activeImg) return;
-                const scale = 'var(--content-scale,1)';
-                if (dir === 'center') {
-                    this.activeImg.style.display = 'block';
-                    this.activeImg.style.margin = `calc(20px * ${scale}) auto`;
-                    this.activeImg.style.float = 'none';
-                } else if (dir === 'left') {
-                    this.activeImg.style.display = 'inline-block';
-                    this.activeImg.style.margin = `calc(10px * ${scale}) calc(25px * ${scale}) calc(10px * ${scale}) 0`;
-                    this.activeImg.style.float = 'left';
-                } else if (dir === 'right') {
-                    this.activeImg.style.display = 'inline-block';
-                    this.activeImg.style.margin = `calc(10px * ${scale}) 0 calc(10px * ${scale}) calc(25px * ${scale})`;
-                    this.activeImg.style.float = 'right';
-                }
-                App.handleInput();
-                setTimeout(() => this.repositionToolbar(), 180);
-            },
-            remove() {
-                if (this.activeImg) {
-                    this.activeImg.remove();
-                    this.hideToolbar();
-                    App.handleInput();
-                }
+            remove(id) {
+                if (!this.db) return;
+                try { this.db.transaction('prophecies', 'readwrite').objectStore('prophecies').delete(id); } catch(e) {}
             }
         };
 
-        /* FINAL BOOT */
-        window.onload = () => {
-            document.getElementById('imageUploadInput').addEventListener('change', Editor.handleImageSelect);
-            App.init();
-            console.log('%c✅ ProImage Pro Enterprise Edition v2.3 loaded — all features preserved + advanced professional tools added', 'background:#6366f1;color:#fff;padding:4px 10px;border-radius:6px');
+        const IDBQueue = new Map();
+        let idbFlushTimer = null;
+        function queueCacheWrite(id, data) {
+            IDBQueue.set(id, data);
+            if (!idbFlushTimer) {
+                idbFlushTimer = setTimeout(() => {
+                    idbFlushTimer = null;
+                    CacheDB.putBatch(Array.from(IDBQueue.values()));
+                    IDBQueue.clear();
+                }, 500);
+            }
+        }
+
+        /* ====================================================================
+           2. GLOBAL STATE & MEMORY MANAGEMENT
+        ==================================================================== */
+        const STATE = {
+            currentPage: 'home', currentProphecyId: null, user: null, isSuspended: false, isOnline: false,
+            userLikes:[], propheciesMap: new Map(), prophecies:[], searchQuery: '',
+            config: { registrationEnabled: true, commentsEnabled: true, maintenanceMode: false, maintenanceMessage: 'System under maintenance.' }
         };
+
+        const Listeners = { chat:[], status: null, supportUnread: null, likes: null };
+        const AVATAR_COLORS =['#6d28d9', '#db2777', '#ea580c', '#0891b2', '#059669', '#dc2626', '#9333ea', '#2563eb'];
+        const encodeEmail = email => email.replace(/\./g, ',');
+
+        /* ====================================================================
+           3. UI BATCH RENDERER (Zero-Lag patcher)
+        ==================================================================== */
+        let renderRequested = false;
+        function scheduleRender() {
+            if (!renderRequested) {
+                renderRequested = true;
+                requestAnimationFrame(() => {
+                    STATE.prophecies = Array.from(STATE.propheciesMap.values()).sort((a, b) => {
+                        if (a.pinned && !b.pinned) return -1;
+                        if (!a.pinned && b.pinned) return 1;
+                        return b.date - a.date;
+                    });
+                    updateViews(); renderRequested = false;
+                });
+            }
+        }
+
+        function safeHTMLPatch(elementId, newHTML) {
+            const el = document.getElementById(elementId);
+            if (el && el.innerHTML !== newHTML) el.innerHTML = newHTML;
+        }
+
+        /* ====================================================================
+           4. DATA NORMALIZATION
+        ==================================================================== */
+        function parseProphecy(key, p) {
+            return {
+                id: key, title: p.title || 'Untitled', image: p.image || 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=1000',
+                body: p.body || '', date: p.updated || Date.now(), readTime: p.readTime || Math.max(1, Math.ceil((p.body || '').split(' ').length / 200)),
+                likes: p.likes || 0, status: p.status || 'Draft', pinned: p.pinned || false,
+                comments: p.comments ? Object.entries(p.comments).map(([cId, cData]) => ({id: cId, ...cData})) :[]
+            };
+        }
+
+        /* ====================================================================
+           5. FIREBASE SYNC ENGINE (Incremental Streams)
+        ==================================================================== */
+        function initFirebaseListeners() {
+            onValue(ref(db, '.info/connected'), (snap) => {
+                STATE.isOnline = snap.val() === true;
+                const dot = document.getElementById('connectionDot');
+                if (dot) {
+                    dot.className = `connection-indicator ${STATE.isOnline ? 'online' : 'offline'}`;
+                    dot.title = STATE.isOnline ? "Online - Real-time sync active" : "Offline - Showing cached data";
+                }
+            });
+
+            onValue(ref(db, 'config'), snap => {
+                if(snap.exists()) STATE.config = { ...STATE.config, ...snap.val() };
+                document.body.classList.toggle('maintenance-mode', STATE.config.maintenanceMode);
+                renderAuth(); scheduleRender(); 
+            });
+
+            const contentRef = ref(db, 'content');
+            onChildAdded(contentRef, snap => { if (snap.exists()) handleSyncUpdate(snap.key, snap.val()); });
+            onChildChanged(contentRef, snap => { if (snap.exists()) handleSyncUpdate(snap.key, snap.val()); });
+            onChildRemoved(contentRef, snap => { STATE.propheciesMap.delete(snap.key); CacheDB.remove(snap.key); scheduleRender(); });
+        }
+
+        function handleSyncUpdate(key, rawData) {
+            const parsed = parseProphecy(key, rawData);
+            if (parsed.status !== 'Published') {
+                if(STATE.propheciesMap.has(key)) { STATE.propheciesMap.delete(key); CacheDB.remove(key); scheduleRender(); }
+                return;
+            }
+            const current = STATE.propheciesMap.get(key);
+            if (!current || JSON.stringify(current) !== JSON.stringify(parsed)) {
+                STATE.propheciesMap.set(key, parsed); queueCacheWrite(key, parsed); scheduleRender();
+            }
+        }
+
+        /* ====================================================================
+           6. INITIALIZATION & LISTENER CORE (With Deep-Link Engine)
+        ==================================================================== */
+        async function init() {
+            await CacheDB.init();
+            
+            // 1. URL Deep Link Parameter Parser
+            const urlParams = new URLSearchParams(window.location.search);
+            const deepLinkId = urlParams.get('p');
+            if (deepLinkId) {
+                STATE.currentPage = 'single';
+                STATE.currentProphecyId = deepLinkId;
+            }
+
+            // 2. Hydrate from Cache
+            const cachedItems = await CacheDB.getAll();
+            if (cachedItems && cachedItems.length > 0) {
+                cachedItems.forEach(p => STATE.propheciesMap.set(p.id, p));
+                STATE.prophecies = Array.from(STATE.propheciesMap.values());
+                updateViews(); 
+            }
+
+            // 3. Mount Session Security
+            const savedSession = localStorage.getItem('gpm_rtdb_session');
+            if (savedSession) {
+                STATE.user = JSON.parse(savedSession);
+                listenToUserLikes(); listenToUserSupportStatus(); listenToUserStatus(); 
+            }
+
+            // 4. Attach Hooks
+            setupEventListeners(); initFirebaseListeners();
+
+            // 5. Initial Nav Rules
+            if (deepLinkId) {
+                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            } else if (cachedItems.length === 0) {
+                navigate('home');
+            } else if (STATE.currentPage === 'home') {
+                renderHome();
+            }
+        }
+
+        function listenToUserStatus() {
+            if (!STATE.user) return;
+            if (Listeners.status) Listeners.status(); 
+            Listeners.status = onValue(ref(db, `users/${STATE.user.id}/status`), snap => {
+                if(!snap.exists()) return;
+                const status = snap.val();
+                if (status === 'Suspended') {
+                    if (!STATE.isSuspended) {
+                        STATE.isSuspended = true;
+                        showToast('Security Alert: Your session was restricted.', 'error');
+                        navigate('suspended');
+                    }
+                } else if (status === 'Active' && STATE.isSuspended) {
+                    STATE.isSuspended = false;
+                    showToast('Your account has been restored.', 'success');
+                    navigate('home');
+                }
+            });
+        }
+
+        function listenToUserLikes() {
+            if (!STATE.user || STATE.isSuspended) return;
+            if (Listeners.likes) Listeners.likes();
+            Listeners.likes = onValue(ref(db, `users/${STATE.user.id}/likes`), (snapshot) => {
+                STATE.userLikes = snapshot.exists() ? Object.keys(snapshot.val()).filter(k => snapshot.val()[k]) :[];
+                if (STATE.currentPage === 'single') scheduleRender();
+            });
+        }
+
+        function listenToUserSupportStatus() {
+            if(!STATE.user) return;
+            if(Listeners.supportUnread) Listeners.supportUnread();
+            Listeners.supportUnread = onValue(ref(db, `support_chats/${STATE.user.id}/unreadUser`), snap => {
+                const navBadge = document.getElementById('nav-support-badge');
+                if(navBadge) navBadge.classList.toggle('hidden', !snap.val());
+            });
+        }
+
+        /* ====================================================================
+           7. VIEW RENDERING CONTROLLERS
+        ==================================================================== */
+        function updateViews() {
+            if (STATE.isSuspended) {
+                document.body.classList.add('suspended-mode');
+                if (STATE.currentPage === 'contact') renderContact(); else renderSuspended();
+                renderRightSidebar(); return;
+            } else { document.body.classList.remove('suspended-mode'); }
+
+            if (STATE.config.maintenanceMode && STATE.currentPage !== 'contact') {
+                renderMaintenance();
+            } else {
+                if (STATE.currentPage === 'home') renderHome();
+                else if (STATE.currentPage === 'prophecy') renderProphecyList();
+                else if (STATE.currentPage === 'about') renderAbout();
+                else if (STATE.currentPage === 'contact') renderContact();
+                else if (STATE.currentPage === 'single') renderSingleProphecy(STATE.currentProphecyId);
+            }
+            renderRightSidebar();
+        }
+
+        function renderSuspended() {
+            safeHTMLPatch('centerContent', `
+                <div class="suspended-container mt-8">
+                    <div class="suspended-icon"><i class="fa-solid fa-user-lock"></i></div>
+                    <h1 class="suspended-title">Account Suspended</h1>
+                    <p class="suspended-text">Your account has been suspended. Please contact support for assistance.</p>
+                    <div class="flex gap-4 mt-2">
+                        <button type="button" class="btn btn-outline" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+                        <button type="button" class="btn btn-primary" style="background: var(--warning); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);" onclick="navigate('contact')">
+                            <i class="fa-solid fa-headset"></i> Contact Support
+                        </button>
+                    </div>
+                </div>
+            `);
+        }
+
+        function renderMaintenance() {
+            safeHTMLPatch('centerContent', `
+                <div class="glass border border-red-500/20 rounded-3xl p-10 text-center flex flex-col items-center justify-center min-h-[60vh] bg-white shadow-xl mt-4">
+                    <div class="w-24 h-24 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-4xl mb-6 shadow-inner"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <h1 class="text-3xl font-bold text-slate-800 mb-4 font-display">System Under Maintenance</h1>
+                    <p class="text-gray max-w-md mx-auto mb-8 leading-relaxed text-lg">${STATE.config.maintenanceMessage}</p>
+                    <div class="flex gap-4"><button type="button" onclick="navigate('contact')" class="btn-maintenance"><i class="fa-solid fa-headset"></i> Contact Support</button></div>
+                </div>
+            `);
+        }
+
+        /* Ultra-Optimized Event Listeners with Debouncing */
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', debounce((e) => { 
+                STATE.searchQuery = e.target.value.toLowerCase(); scheduleRender(); 
+            }, 300));
+
+            document.getElementById('openLeft').addEventListener('click', () => { document.getElementById('leftSidebar').classList.add('open'); document.getElementById('overlay').classList.add('active'); document.body.style.overflow = 'hidden'; });
+            document.getElementById('openRight').addEventListener('click', () => { document.getElementById('rightSidebar').classList.add('open'); document.getElementById('overlay').classList.add('active'); document.body.style.overflow = 'hidden'; });
+            document.addEventListener('click', (e) => { if (!e.target.closest('.user-menu')) { const drop = document.getElementById('userDropdown'); if(drop) drop.classList.remove('active'); }});
+        }
+
+        function closeSidebars() {['leftSidebar', 'rightSidebar', 'overlay'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('active', 'open'); });
+            document.body.style.overflow = '';
+        }
+
+        function clearChatListeners() {
+            Listeners.chat.forEach(unsub => unsub());
+            Listeners.chat =[];
+        }
+
+        function renderAuth() {
+            const authButtons = document.getElementById('authButtons'); const userMenu = document.getElementById('userMenu');
+            const regBtn = document.getElementById('headerRegBtn'); const regFooter = document.getElementById('loginRegFooter');
+            
+            if (STATE.user) {
+                authButtons.classList.add('hidden'); userMenu.classList.remove('hidden');
+                document.getElementById('userAvatar').textContent = getInitials(STATE.user.name);
+                document.getElementById('userDropdown').innerHTML = `
+                    <div class="user-info"><div class="user-name">${STATE.user.name}</div><div class="user-email">${STATE.user.email}</div></div>
+                    ${!STATE.isSuspended ? `<button type="button" class="dropdown-item" onclick="navigate('home')"><i class="fa-solid fa-house"></i> Home</button>` : ''}
+                    <button type="button" class="dropdown-item" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+                `;
+            } else {
+                authButtons.classList.remove('hidden'); userMenu.classList.add('hidden');
+                if(STATE.config.registrationEnabled) {
+                    if(regBtn) regBtn.classList.remove('hidden');
+                    if(regFooter) regFooter.innerHTML = `Don't have an account? <a onclick="switchModal('login', 'register')">Register</a>`;
+                } else {
+                    if(regBtn) regBtn.classList.add('hidden');
+                    if(regFooter) regFooter.innerHTML = `<div class="mt-2 text-warning bg-red-50 p-3 rounded-lg border border-red-200 text-[13px] font-medium"><i class="fa-solid fa-lock mr-1"></i> Registration is currently disabled by the administration.</div>`;
+                }
+            }
+        }
+
+        function getInitials(name) { return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2); }
+        function openModal(type) { 
+            if(type === 'register' && !STATE.config.registrationEnabled) return showToast('Registration disabled.', 'error');
+            closeSidebars(); document.getElementById(type + 'Modal').classList.add('active'); document.body.style.overflow = 'hidden'; 
+        }
+        function closeModal(type) { document.getElementById(type + 'Modal').classList.remove('active'); document.body.style.overflow = ''; }
+        function switchModal(from, to) { closeModal(from); setTimeout(() => openModal(to), 200); }
+        function toggleUserDropdown() { document.getElementById('userDropdown').classList.toggle('active'); }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            if(!STATE.config.registrationEnabled) return showToast('Registration disabled.', 'error');
+            const name = document.getElementById('regName').value.trim(), email = document.getElementById('regEmail').value.trim().toLowerCase(), password = document.getElementById('regPassword').value, userId = encodeEmail(email), userRef = ref(db, `users/${userId}`);
+
+            try {
+                if ((await get(userRef)).exists()) return showToast('Email already registered', 'error');
+                await set(userRef, { id: userId, name: name, email: email, password: password, role: 'User', status: 'Active', joinedAt: Date.now() });
+                STATE.user = { id: userId, name: name, email: email }; localStorage.setItem('gpm_rtdb_session', JSON.stringify(STATE.user));
+                listenToUserLikes(); listenToUserSupportStatus(); listenToUserStatus();
+                closeModal('register'); renderAuth(); document.getElementById('registerForm').reset();
+                showToast(`Welcome, ${name}! Your account is created.`);
+                try{ await push(ref(db, 'audit'), {timestamp: Date.now(), type: 'AUTH', action: 'REGISTER', identity: email, desc: 'New app registration'}); }catch(e){}
+                scheduleRender(); // Re-render in place
+            } catch (error) { showToast('Registration failed.', 'error'); }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim().toLowerCase(), password = document.getElementById('loginPassword').value, userId = encodeEmail(email), userRef = ref(db, `users/${userId}`);
+
+            try {
+                const snapshot = await get(userRef);
+                if (!snapshot.exists() || snapshot.val().password !== password) return showToast('Invalid credentials', 'error');
+                
+                const userData = snapshot.val(); await update(userRef, { lastLogin: Date.now() });
+                
+                // Mount session regardless of status so support works
+                STATE.user = { id: userId, name: userData.name, email: userData.email };
+                localStorage.setItem('gpm_rtdb_session', JSON.stringify(STATE.user));
+
+                // Process specific Suspension Jail Login Vector
+                if (userData.status === 'Suspended') {
+                    STATE.isSuspended = true; listenToUserSupportStatus(); listenToUserStatus(); 
+                    closeModal('login'); renderAuth(); document.getElementById('loginForm').reset();
+                    navigate('suspended'); return;
+                }
+
+                STATE.isSuspended = false; listenToUserLikes(); listenToUserSupportStatus(); listenToUserStatus();
+                closeModal('login'); renderAuth(); document.getElementById('loginForm').reset();
+                showToast(`Welcome back, ${userData.name}!`); 
+                
+                scheduleRender(); // Smart Re-hydration: Unlock current page without forcing home redirect
+            } catch (error) { showToast('Login failed.', 'error'); }
+        }
+
+        function logout() {
+            const wasContact = (STATE.currentPage === 'contact');
+            
+            STATE.user = null; STATE.isSuspended = false; STATE.userLikes =[]; localStorage.removeItem('gpm_rtdb_session');
+            document.body.classList.remove('suspended-mode'); renderAuth();
+            clearChatListeners();
+            if (Listeners.supportUnread) { Listeners.supportUnread(); Listeners.supportUnread = null; }
+            if (Listeners.status) { Listeners.status(); Listeners.status = null; }
+            if (Listeners.likes) { Listeners.likes(); Listeners.likes = null; }
+            const navBadge = document.getElementById('nav-support-badge'); if (navBadge) navBadge.classList.add('hidden');
+            
+            showToast('You have been logged out'); 
+            document.getElementById('userDropdown').classList.remove('active'); 
+            
+            // Context-Aware Navigation Check
+            if (wasContact) {
+                scheduleRender(); // Rehydrates the support lock screen
+                setTimeout(() => openModal('login'), 100); // Prompts seamless re-login
+            } else {
+                navigate('home');
+            }
+        }
+
+        function navigate(page, id = null) {
+            // Strict Navigation Interceptors based on Global State Configurations
+            if (STATE.isSuspended && page !== 'logout' && page !== 'contact' && page !== 'suspended') { 
+                page = 'suspended'; 
+            } else if (STATE.config.maintenanceMode && page !== 'contact' && page !== 'logout') {
+                page = 'home'; 
+            }
+
+            STATE.currentPage = page;
+            STATE.currentProphecyId = id;
+            
+            // Clean up URL deep link parameter if navigating away from single post natively
+            if (page !== 'single') {
+                const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                window.history.replaceState({path:newUrl}, '', newUrl);
+            }
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.page === page));
+            closeSidebars(); scheduleRender(); window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (page === 'single' && id) runTransaction(ref(db, `content/${id}/views`), (views) => (views || 0) + 1).catch(()=>{});
+            if (page !== 'contact') clearChatListeners();
+        }
+
+        /* ====================================================================
+           8. CORE UI & AUTO-GENERATION IMAGE RENDERER (w/ DEEP LINKS)
+        ==================================================================== */
+
+        window.openShareProphecy = async function(id) {
+            const prophecy = STATE.propheciesMap.get(id);
+            if (!prophecy) return showToast('Prophecy not found', 'error');
+
+            const loadingToast = document.createElement('div');
+            loadingToast.className = 'toast loading show';
+            loadingToast.innerHTML = '<i class="fa-solid fa-circle-notch"></i><span>Generating HD Social Image...</span>';
+            document.getElementById('toastContainer').appendChild(loadingToast);
+
+            try {
+                // Resolve Exact Deep Link URL
+                const currentDomain = window.location.hostname;
+                const postDeepLinkUrl = `${window.location.origin}${window.location.pathname}?p=${id}`;
+                const professionalShareText = `📖 ${prophecy.title}\n✍️ By Minister Michael\n\nRead the full prophetic message and share your testimony here:\n`;
+                
+                document.getElementById('exportDomainName').textContent = currentDomain;
+                document.getElementById('exportDate').textContent = formatDate(prophecy.date);
+                document.getElementById('exportTitle').textContent = prophecy.title;
+                
+                // Smart Typography Adaptation based on Length
+                const exportBody = document.getElementById('exportBody');
+                exportBody.innerHTML = prophecy.body; // Render HTML tags
+                
+                const charCount = exportBody.textContent.length;
+                if (charCount < 250) { exportBody.style.fontSize = '42px'; exportBody.style.lineHeight = '1.8'; } 
+                else if (charCount < 600) { exportBody.style.fontSize = '32px'; exportBody.style.lineHeight = '1.6'; } 
+                else if (charCount < 1200) { exportBody.style.fontSize = '26px'; exportBody.style.lineHeight = '1.6'; } 
+                else { exportBody.style.fontSize = '22px'; exportBody.style.lineHeight = '1.5'; }
+
+                // Handle Image Loading with CORS bypass detection
+                const exportImg = document.getElementById('exportImg');
+                if (prophecy.image) {
+                    exportImg.classList.remove('hidden'); exportImg.src = prophecy.image;
+                    await new Promise((resolve) => {
+                        exportImg.onload = resolve; exportImg.onerror = () => { exportImg.classList.add('hidden'); resolve(); };
+                        setTimeout(resolve, 3000); // 3s timeout
+                    });
+                } else { exportImg.classList.add('hidden'); }
+
+                // Render Canvas
+                const wrapper = document.getElementById('exportContainerWrapper');
+                const canvas = await html2canvas(wrapper, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff' });
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.95); 
+                
+                // Mount to Share Modal
+                document.getElementById('shareImagePreviewBox').innerHTML = `<img src="${dataUrl}" alt="Preview">`;
+                
+                // Bind Download Button
+                document.getElementById('btnDownloadImage').onclick = () => {
+                    const link = document.createElement('a'); link.download = `Gospel_Prophecy_${id}.jpg`; link.href = dataUrl; link.click();
+                };
+
+                // Bind Native Share Button (Injects Deep Link!)
+                document.getElementById('btnNativeShare').onclick = async () => {
+                    try {
+                        const blob = await (await fetch(dataUrl)).blob();
+                        const file = new File([blob], 'prophecy.jpg', { type: 'image/jpeg' });
+                        // CRITICAL FIX: Append URL directly to text to prevent WhatsApp/Facebook intent drops
+                        const robustShareText = `${professionalShareText}🔗 ${postDeepLinkUrl}`;
+
+                        if (navigator.canShare && navigator.canShare({ files:[file] })) {
+                            await navigator.share({
+                                files: [file],
+                                title: prophecy.title,
+                                text: robustShareText // URL included safely inside text
+                            });
+                        } else if (navigator.share) {
+                            // Fallback: Device supports native share but NOT file attachments
+                            await navigator.share({
+                                title: prophecy.title,
+                                text: robustShareText
+                            });
+                            showToast('Image attachment not supported by device. Link shared natively!', 'warning');
+                        } else {
+                            // No native share supported at all
+                            showToast('Native sharing not supported. Image downloaded.', 'warning');
+                            document.getElementById('btnDownloadImage').click();
+                        }
+                    } catch (err) { 
+                        // Silently ignore user aborts (closing the share sheet)
+                        if (err.name !== 'AbortError') {
+                            console.error(err);
+                            showToast('Sharing failed. Try copying the link.', 'error');
+                        }
+                    }
+                };
+
+                // Bind Copy Link Button (Injects Deep Link + Professional Text!)
+                document.getElementById('btnCopyLink').onclick = () => {
+                    navigator.clipboard.writeText(`${professionalShareText}🔗 ${postDeepLinkUrl}`);
+                    showToast('Professional Link copied to clipboard!');
+                };
+
+                loadingToast.remove(); openModal('share');
+
+            } catch (err) {
+                console.error(err); loadingToast.remove();
+                showToast('Failed to generate image. Basic deep-link copied.', 'warning');
+                navigator.clipboard.writeText(`📖 ${prophecy.title}\n🔗 ${window.location.origin}${window.location.pathname}?p=${id}`);
+            }
+        };
+        
+        // Basic Direct Share Fallback
+        function shareProphecy(id) {
+            const prophecy = STATE.propheciesMap.get(id); if (!prophecy) return;
+            const postDeepLinkUrl = `${window.location.origin}${window.location.pathname}?p=${id}`;
+            const professionalShareText = `📖 ${prophecy.title}\n✍️ By Minister Michael\n\nRead the full prophetic message here:\n🔗 ${postDeepLinkUrl}`;
+
+            if (navigator.share) {
+                navigator.share({ 
+                    title: prophecy.title, 
+                    text: `📖 ${prophecy.title}\n✍️ By Minister Michael\n\nRead the full prophetic message here:\n🔗 ${postDeepLinkUrl}` 
+                }).catch(e => {
+                    if (e.name !== 'AbortError') navigator.clipboard.writeText(professionalShareText).then(() => showToast('Link copied to clipboard!'));
+                });
+            } else {
+                navigator.clipboard.writeText(professionalShareText).then(() => showToast('Link copied to clipboard!'));
+            }
+        }
+
+        function renderHome() {
+            const recent = STATE.prophecies.slice(0, 3);
+            const recentHTML = recent.length > 0 ? `
+                <div class="section-header mt-8">
+                    <h2 class="section-title"><span class="section-icon"><i class="fa-solid fa-fire text-orange-500"></i></span> Latest Prophecies</h2>
+                    <a href="#" class="view-all" onclick="navigate('prophecy'); return false;">View All <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+                <div class="prophecies-grid mb-10">
+                    ${recent.map(p => `
+                        <div class="prophecy-card-large" onclick="navigate('single', '${p.id}')">
+                            <img src="${p.image}" loading="lazy" alt="${p.title}">
+                            <div class="prophecy-card-large-content">
+                                <div class="p-date flex items-center justify-between"><span>${formatDate(p.date)}</span>${p.pinned ? '<i class="fa-solid fa-thumbtack text-primary"></i>' : ''}</div>
+                                <h3 class="p-title" style="-webkit-line-clamp: 2; font-size: 16px; margin: 8px 0;">${p.title}</h3>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>` : '';
+
+            const allComments =[]; STATE.prophecies.forEach(p => p.comments.forEach(c => allComments.push({ ...c, pId: p.id, pTitle: p.title })));
+            const latestTestimonies = allComments.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 6);
+            const tHTML = latestTestimonies.map(t => `
+                <div class="testimony-card" onclick="navigate('single', '${t.pId}')">
+                    <i class="fa-solid fa-quote-right testimony-quote"></i><p class="testimony-text">${t.text}</p>
+                    <div class="testimony-footer">
+                        <div class="testimony-avatar" style="background: ${t.avatarColor || '#6d28d9'}">${getInitials(t.user)}</div>
+                        <div><div class="testimony-name">${t.user}</div><div class="testimony-date">${formatDate(t.date)} • ${t.pTitle.slice(0, 25)}...</div></div>
+                    </div>
+                </div>`).join('') || '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--gray); background: white; border-radius: 20px; border: 1px solid #f1f5f9;">No testimonies available yet. Be the first to share!</div>';
+
+            safeHTMLPatch('centerContent', `
+                <div class="hero">
+                    <div class="hero-bg"><img src="https://images.unsplash.com/photo-1504052434569-70ad5836ab65?q=80&w=2070" loading="eager" alt="Sunset"></div>
+                    <div class="hero-overlay"></div>
+                    <div class="hero-content">
+                        <h1 class="hero-title">Hear What The<span>Spirit Is Saying</span></h1>
+                        <p class="hero-sub">Timely prophetic words, revelations, and encouragement for the body of Christ in this hour.</p>
+                        <button type="button" class="btn-hero" onclick="openLatestProphecy()"><i class="fa-solid fa-book-open"></i> Read Latest Prophecy</button>
+                    </div>
+                </div>
+                ${recentHTML}
+                <div class="section-header"><h2 class="section-title"><span class="section-icon"><i class="fa-solid fa-heart"></i></span> Powerful Testimonies</h2></div>
+                <div class="testimonies-grid">${tHTML}</div>
+            `);
+        }
+
+        function renderProphecyList() {
+            safeHTMLPatch('centerContent', `
+                <div class="page-header"><h1 class="page-title">All Prophetic Words</h1><p class="page-subtitle">Browse through the archive of prophetic messages from Minister Michael</p></div>
+                <div class="prophecies-grid">
+                    ${STATE.prophecies.length > 0 ? STATE.prophecies.map(p => `
+                        <div class="prophecy-card-large" onclick="navigate('single', '${p.id}')">
+                            <img src="${p.image}" loading="lazy" alt="${p.title}">
+                            <div class="prophecy-card-large-content">
+                                <div class="p-date flex items-center justify-between"><span>${formatDate(p.date)}</span>${p.pinned ? '<i class="fa-solid fa-thumbtack text-primary"></i>' : ''}</div>
+                                <h3 class="p-title" style="-webkit-line-clamp: 3; font-size: 17px; margin: 8px 0;">${p.title}</h3>
+                                <div class="p-meta" style="margin-top: 12px;"><span><i class="fa-regular fa-clock"></i> ${p.readTime} min read</span><span><i class="fa-solid fa-heart text-red-500"></i> ${p.likes}</span><span><i class="fa-solid fa-comment text-blue-500"></i> ${p.comments.length}</span></div>
+                            </div>
+                        </div>`).join('') : '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--gray);">No prophetic words published yet. Check back later!</div>'}
+                </div>
+            `);
+        }
+
+        function renderAbout() {
+            safeHTMLPatch('centerContent', `
+                <div class="bg-white rounded-3xl p-8 md:p-12 shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-border">
+                    <div class="text-center max-w-2xl mx-auto mb-10">
+                        <div class="w-32 h-32 mx-auto rounded-full p-1.5 bg-primary-light mb-6 border-2 border-primary-light shadow-sm">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200" loading="lazy" alt="Minister Michael" class="w-full h-full object-cover rounded-full shadow-md">
+                        </div>
+                        <h1 class="text-3xl md:text-4xl font-extrabold font-display text-dark mb-3">About Minister Michael</h1>
+                        <p class="text-primary font-semibold tracking-wider uppercase text-xs md:text-sm">Prophet, Teacher, and Watchman</p>
+                    </div>
+                    <div class="max-w-3xl mx-auto text-gray-700 leading-relaxed text-base md:text-lg space-y-6">
+                        <p>Minister Michael is a prophetic voice raised by God for such a time as this. With over 15 years in ministry, he carries a distinct mandate to hear the heart of the Father and deliver timely words to the body of Christ.</p>
+                        <p>The Gospel Prophecy Message platform was birthed from Amos 3:7 — <span class="font-medium text-dark">"Surely the Lord GOD does nothing, unless He reveals His secret to His servants the prophets."</span> Through this ministry, thousands have received direction, encouragement, healing, and restoration.</p>
+                        <div class="mt-10 pt-8 border-t border-gray-100">
+                            <h3 class="text-2xl font-bold text-dark mb-4 flex items-center gap-3"><span class="w-10 h-10 rounded-xl bg-orange-100 text-orange-500 flex items-center justify-center text-lg"><i class="fa-solid fa-bullseye"></i></span>Our Mission</h3>
+                            <p>To equip the saints with prophetic intelligence for victorious living, to sound the alarm in the spirit, and to prepare the bride for the return of the King.</p>
+                        </div>
+                        <div class="bg-primary-light/50 border border-primary-light p-8 rounded-2xl mt-8 text-center relative overflow-hidden">
+                            <i class="fa-solid fa-quote-left absolute text-5xl text-primary/10 top-4 left-4"></i>
+                            <p class="italic text-primary-dark font-medium mb-4 text-xl relative z-10">"We do not prophecy for fame, but for the edification of the church and the glory of Jesus Christ alone."</p>
+                            <strong class="text-primary tracking-wide text-sm uppercase relative z-10">— Minister Michael</strong>
+                        </div>
+                    </div>
+                </div>
+            `);
+        }
+
+        // CHAT RENDERER - Uses Multi-Tier Events (Added, Changed, Removed) for O(1) Updates
+        function getChatBubbleHTML(m) {
+            return `<div class="chat-bubble ${m.sender === 'user' ? 'user' : 'admin'}">${m.text.replace(/\n/g, '<br>')}<span class="chat-time" style="color: ${m.sender === 'user' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.5)'}">${new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></div>`;
+        }
+
+        function renderContact() {
+            if (!STATE.user) {
+                safeHTMLPatch('centerContent', `
+                    <div class="page-header"><h1 class="page-title">Contact Support</h1><p class="page-subtitle">Direct, private communication with the admin team.</p></div>
+                    <div class="about-content text-center py-16 mt-4 border border-border">
+                        <div class="w-20 h-20 bg-primary-light text-primary rounded-full flex items-center justify-center text-3xl mx-auto mb-6"><i class="fa-solid fa-lock"></i></div>
+                        <h3 class="text-2xl font-bold mb-3">Authentication Required</h3>
+                        <p class="text-gray mb-8 max-w-md mx-auto">Please login or create a free account to initiate a secure, private chat with our support administrators.</p>
+                        <button type="button" class="btn btn-primary mx-auto shadow-lg" onclick="openModal('login')" style="padding: 12px 32px; font-size: 16px;"><i class="fa-solid fa-right-to-bracket mr-2"></i> Login to Chat</button>
+                    </div>`); return;
+            }
+            safeHTMLPatch('centerContent', `
+                ${STATE.isSuspended ? `<div class="bg-red-50 text-red-600 border border-red-200 rounded-xl p-4 mb-4 flex items-center gap-3"><i class="fa-solid fa-triangle-exclamation"></i><span class="font-medium text-sm">Account Support Mode. Please explain your situation to our admin team.</span></div>` : ''}
+                <div class="chat-container relative shadow-xl border border-border">
+                    <div class="chat-header">
+                        <div class="w-12 h-12 rounded-full bg-primary-light text-primary flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-user-shield"></i></div>
+                        <div class="flex-1 min-w-0"><div style="color: var(--dark); font-size: 16px; font-weight: 700;">Admin Support Hub</div><div style="color: var(--success); font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-circle" style="font-size: 8px;"></i> Online - End-to-end Encrypted</div></div>
+                    </div>
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <form class="chat-input-area" onsubmit="sendChatMessage(event)">
+                        <textarea id="chatInput" class="chat-input scrollbar" placeholder="Type your inquiry or message here..." required onkeydown="if(event.keyCode===13 && !event.shiftKey){event.preventDefault(); sendChatMessage(event);}"></textarea>
+                        <button type="submit" class="chat-send-btn" id="chatSendBtn"><i class="fa-solid fa-paper-plane"></i></button>
+                    </form>
+                </div>
+            `);
+            
+            update(ref(db, `support_chats/${STATE.user.id}`), { unreadUser: false }).catch(()=>{});
+            clearChatListeners();
+            
+            const container = document.getElementById('chatMessages');
+            const chatRef = ref(db, `support_chats/${STATE.user.id}/messages`);
+            
+            // 1. Initial Load & New Messages
+            Listeners.chat.push(onChildAdded(chatRef, snap => {
+                if(!snap.exists()) return; 
+                update(ref(db, `support_chats/${STATE.user.id}`), { unreadUser: false }).catch(()=>{}); 
+                const m = snap.val();
+                const div = document.createElement('div'); 
+                div.id = `msg-${snap.key}`;
+                div.className = `flex flex-col mb-2 ${m.sender === 'user' ? 'items-end' : 'items-start'}`;
+                div.innerHTML = getChatBubbleHTML(m);
+                if (container) {
+                    container.appendChild(div); 
+                    requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; }); // Hardware accelerated anchor
+                }
+            }));
+
+            // 2. Real-time Message Edits
+            Listeners.chat.push(onChildChanged(chatRef, snap => {
+                if(!snap.exists()) return; 
+                const m = snap.val();
+                const div = document.getElementById(`msg-${snap.key}`);
+                if (div) {
+                    div.className = `flex flex-col mb-2 ${m.sender === 'user' ? 'items-end' : 'items-start'}`;
+                    div.innerHTML = getChatBubbleHTML(m);
+                }
+            }));
+
+            // 3. Real-time Message Deletions
+            Listeners.chat.push(onChildRemoved(chatRef, snap => {
+                const div = document.getElementById(`msg-${snap.key}`);
+                if (div) div.remove();
+            }));
+        }
+
+        async function sendChatMessage(e) {
+            if (e) e.preventDefault(); 
+            const currentUser = STATE.user; // Synchronous state capture prevents null-errors on mid-flight logout
+            if (!currentUser) return;
+            
+            const input = document.getElementById('chatInput'); const btn = document.getElementById('chatSendBtn'); 
+            const text = input.value.trim(); if (!text) return;
+            input.disabled = true; btn.disabled = true;
+            
+            try {
+                const timestamp = Date.now();
+                await push(ref(db, `support_chats/${currentUser.id}/messages`), { text: text, sender: 'user', timestamp: timestamp });
+                await set(ref(db, `tickets/${currentUser.id}`), { title: `Chat: ${text.substring(0, 30)}...`, user: currentUser.name, email: currentUser.email, status: 'Open', date: timestamp, lastMessage: text });
+                await update(ref(db, `support_chats/${currentUser.id}`), { unreadAdmin: true, lastActivity: timestamp });
+                if(input) input.value = '';
+                try{ await push(ref(db, 'audit'), {timestamp: Date.now(), type: 'SUPPORT', action: 'CREATE', identity: currentUser.email, desc: 'Sent direct support message'}); }catch(e){}
+            } catch (error) { showToast('Failed to send message', 'error'); } 
+            finally { 
+                if(input) input.disabled = false; 
+                if(btn) btn.disabled = false; 
+                if(input) input.focus(); 
+            }
+        }
+
+        function renderSingleProphecy(id) {
+            const prophecy = STATE.propheciesMap.get(id); if (!prophecy) return;
+            const isLiked = STATE.userLikes.includes(id);
+            let commentFormUI = !STATE.config.commentsEnabled ? `<div class="p-6 text-center bg-gray-50 rounded-xl text-gray font-medium border border-border mt-4"><i class="fa-solid fa-lock mr-2 text-gray-light"></i>This feature has been disabled by the administration.</div>` : STATE.user ? `
+                <form class="comment-form" onsubmit="addComment(event, '${id}')">
+                    <textarea placeholder="Share your testimony or what God is saying to you through this word..." required id="commentText"></textarea>
+                    <div class="comment-form-footer"><button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i> Post Testimony</button></div>
+                </form>` : `<div class="login-prompt"><i class="fa-solid fa-lock"></i> Please <a onclick="openModal('login')">login</a> to share your testimony</div>`;
+
+            safeHTMLPatch('centerContent', `
+                <div class="single-view">
+                    <button type="button" class="back-btn" onclick="navigate('home')"><i class="fa-solid fa-arrow-left"></i> Back to Home</button>
+                    <img src="${prophecy.image}" alt="${prophecy.title}" class="single-img">
+                    <div class="single-meta flex justify-between w-full items-center">
+                        <div class="flex items-center gap-4 flex-wrap"><span class="single-date">${formatDate(prophecy.date)}</span><span class="single-read"><i class="fa-regular fa-clock"></i> ${prophecy.readTime} min read</span></div>
+                        ${prophecy.pinned ? '<div class="text-primary font-bold text-sm bg-primary-light px-3 py-1 rounded-lg"><i class="fa-solid fa-thumbtack mr-1"></i> Pinned</div>' : ''}
+                    </div>
+                    <h1 class="single-title">${prophecy.title}</h1><div class="single-body">${prophecy.body}</div>
+                    <div class="single-actions">
+                        <button type="button" class="action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${id}')" id="likeBtn"><i class="fa-${isLiked ? 'solid' : 'regular'} fa-heart"></i><span>${prophecy.likes} ${prophecy.likes === 1 ? 'Like' : 'Likes'}</span></button>
+                        <button type="button" class="action-btn" onclick="openShareProphecy('${id}')"><i class="fa-solid fa-share-nodes"></i><span>Share HD Image</span></button>
+                    </div>
+                    <div class="comments-section">
+                        <h3><i class="fa-solid fa-comments" style="color: var(--primary);"></i> Testimonies & Comments (${prophecy.comments.length})</h3>${commentFormUI}
+                        <div class="comment-list" id="commentList">
+                            ${prophecy.comments.slice().reverse().map(c => `
+                                <div class="comment-item">
+                                    <div class="comment-avatar" style="background: ${c.avatarColor || '#6d28d9'}">${getInitials(c.user)}</div>
+                                    <div class="comment-content"><div class="comment-header"><span class="comment-name">${c.user}</span><span class="comment-date">• ${formatDate(c.date)}</span></div><p class="comment-text">${c.text}</p></div>
+                                </div>`).join('') || (!STATE.config.commentsEnabled ? '' : '<p style="text-align:center; color: var(--gray); padding: 20px;">Be the first to share a testimony</p>')}
+                        </div>
+                    </div>
+                </div>
+            `);
+        }
+
+        function renderRightSidebar() {
+            if(STATE.config.maintenanceMode && STATE.currentPage !== 'contact') {
+                document.querySelector('.search-wrap').style.display = 'none';
+                safeHTMLPatch('prophecyList', `<div class="p-6 text-center text-gray text-sm font-medium bg-gray-50 rounded-xl border border-border">Content unavailable during maintenance.</div>`); return;
+            }
+            document.querySelector('.search-wrap').style.display = 'block';
+            let filtered = STATE.searchQuery ? STATE.prophecies.filter(p => p.title.toLowerCase().includes(STATE.searchQuery) || formatDate(p.date).toLowerCase().includes(STATE.searchQuery)) : STATE.prophecies;
+            safeHTMLPatch('prophecyList', filtered.map(p => `
+                <div class="prophecy-card" onclick="navigate('single', '${p.id}'); closeSidebars();">
+                    <div class="p-card-top"><img src="${p.image}" loading="lazy" alt="" class="p-thumb"><div class="p-content"><div class="p-date flex justify-between"><span>${formatDate(p.date)}</span>${p.pinned ? '<i class="fa-solid fa-thumbtack text-primary"></i>' : ''}</div><div class="p-title">${p.title}</div><div class="p-meta"><span><i class="fa-regular fa-clock"></i> ${p.readTime}m</span><span><i class="fa-solid fa-heart text-red-500"></i> ${p.likes}</span></div></div></div>
+                    <button type="button" class="btn-read">Read full Message</button>
+                </div>`).join('') || `<p style="text-align:center; color: var(--gray); padding: 20px; font-size: 14px;">No prophecies found</p>`);
+        }
+
+        async function toggleLike(id) {
+            const currentUser = STATE.user; // Synchronous capture
+            if (!currentUser) { showToast('Please login to like prophecies', 'error'); openModal('login'); return; }
+            try {
+                if (STATE.userLikes.includes(id)) { 
+                    await set(ref(db, `users/${currentUser.id}/likes/${id}`), null); 
+                    await runTransaction(ref(db, `content/${id}/likes`), (c) => Math.max(0, (c || 0) - 1)); showToast('Removed from likes'); 
+                } else { 
+                    await set(ref(db, `users/${currentUser.id}/likes/${id}`), true); 
+                    await runTransaction(ref(db, `content/${id}/likes`), (c) => (c || 0) + 1); showToast('Added to your likes'); 
+                    try{ await push(ref(db, 'audit'), {timestamp: Date.now(), type: 'USER', action: 'LIKE', identity: currentUser.email, desc: `Liked post ${id}`}); }catch(e){} 
+                }
+            } catch (error) { showToast('Action failed', 'error'); }
+        }
+
+        async function addComment(e, prophecyId) {
+            e.preventDefault(); 
+            const currentUser = STATE.user; // Synchronous capture
+            const input = document.getElementById('commentText');
+            if (!currentUser || !STATE.config.commentsEnabled || !input.value.trim()) return;
+            
+            try {
+                await push(ref(db, `content/${prophecyId}/comments`), { user: currentUser.name, userId: currentUser.id, text: input.value.trim(), date: new Date().toISOString(), avatarColor: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)] });
+                input.value = ''; showToast('Your testimony has been shared!');
+                try{ await push(ref(db, 'audit'), {timestamp: Date.now(), type: 'CONTENT', action: 'COMMENT', identity: currentUser.email, desc: `Commented on post ${prophecyId}`}); }catch(e){}
+            } catch (error) { showToast('Failed to post comment', 'error'); }
+        }
+
+        function openLatestProphecy() { const latest = STATE.prophecies[0]; if (latest) navigate('single', latest.id); else showToast('No prophecies available yet', 'error'); }
+        function formatDate(dateStr) { return dateStr ? new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''; }
+
+        // Window Exports for DOM Event Bindings
+        window.openModal = openModal; window.closeModal = closeModal; window.switchModal = switchModal;
+        window.toggleUserDropdown = toggleUserDropdown; window.handleRegister = handleRegister; window.handleLogin = handleLogin;
+        window.logout = logout; window.navigate = navigate; window.closeSidebars = closeSidebars; window.toggleLike = toggleLike;
+        window.addComment = addComment; window.openLatestProphecy = openLatestProphecy; window.sendChatMessage = sendChatMessage; window.shareProphecy = shareProphecy;
+
+        init();
     </script>
 </body>
 </html>
